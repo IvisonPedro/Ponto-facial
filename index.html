@@ -3,37 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radar Ponto - Oficial</title>
+    <title>Radar Ponto - Gestão Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
         :root { --primary: #003366; --accent: #2563eb; --success: #16a34a; --danger: #dc2626; --bg: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
-        
         .logo-text { font-size: 28px; font-weight: 900; color: var(--primary); letter-spacing: 2px; border: 3px solid var(--primary); display: inline-block; padding: 5px 15px; }
-        
         .clock-display { background: #1e293b; color: white; padding: 30px 10px; border-radius: 20px; margin: 20px 0; }
         .time { font-size: 3.5rem; font-weight: 800; font-family: monospace; }
-        
         #video-container { position: relative; width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; display: none; }
         video { width: 100%; display: block; }
-        
-        button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
         .btn-main { background: var(--primary); color: white; }
+        .btn-edit { background: #e2e8f0; color: #475569; padding: 5px 10px; font-size: 11px; width: auto; margin: 2px; }
         
-        /* Estilos do Relatório */
-        .admin-screen { width: 100%; max-width: 900px; background: white; padding: 30px; border-radius: 20px; }
+        /* Estilos ADM */
+        .admin-screen { width: 100%; max-width: 950px; background: white; padding: 30px; border-radius: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
         th, td { border: 1px solid #000; padding: 8px; text-align: center; }
-        .resumo-horas { display: flex; justify-content: space-around; background: #f1f5f9; padding: 10px; border-radius: 8px; margin: 10px 0; font-weight: bold; font-size: 13px; }
+        .resumo-horas { display: flex; justify-content: space-around; background: #f1f5f9; padding: 10px; border-radius: 8px; margin: 10px 0; font-weight: bold; }
 
         .hidden { display: none !important; }
-        @media print { 
-            .no-print { display: none !important; } 
-            body { background: white; }
-            .admin-screen { max-width: 100%; padding: 0; }
-        }
+        @media print { .no-print { display: none !important; } table { font-size: 10px; } .btn-edit { display: none; } }
     </style>
 </head>
 <body>
@@ -53,9 +46,9 @@
 
 <div class="container hidden" id="admin-app">
     <div class="admin-screen">
-        <div class="no-print" style="margin-bottom: 20px;">
-            <button class="btn-main" style="width:auto; padding:10px 20px;" onclick="window.print()">🖨️ Gerar PDF / Imprimir</button>
-            <button class="btn-main" style="width:auto; padding:10px 20px; background:#64748b;" onclick="location.reload()">Voltar</button>
+        <div class="no-print" style="margin-bottom: 20px; display: flex; gap: 10px;">
+            <button class="btn-main" style="width:auto;" onclick="window.print()">🖨️ Imprimir PDF</button>
+            <button class="btn-main" style="width:auto; background:#64748b;" onclick="location.reload()">Sair</button>
         </div>
         <div id="lista-relatorios"></div>
     </div>
@@ -65,7 +58,7 @@
     let faceMatcher = null;
     const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
 
-    // Funções de Tempo e IA (Mantidas conforme funcionamento anterior)
+    // Funções de Inicialização e Tempo
     function moverRelogio() {
         const agora = new Date();
         document.getElementById('txt-time').innerText = agora.toLocaleTimeString('pt-BR');
@@ -79,7 +72,7 @@
             await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
             treinarRostos();
             setInterval(moverRelogio, 1000);
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Erro ao carregar IA"); }
     }
 
     function treinarRostos() {
@@ -103,7 +96,7 @@
                     registrarPonto(result.label);
                 }
             } else if (detect && !faceMatcher) {
-                const nome = prompt("Novo cadastro. Nome:");
+                const nome = prompt("Novo cadastro. Nome Completo:");
                 if(nome) {
                     const banco = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
                     banco[nome] = Array.from(detect.descriptor);
@@ -114,16 +107,61 @@
         }, 600);
     }
 
+    // REGISTRO COM TRAVA REFORÇADA
     function registrarPonto(nome) {
         let pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
-        pontos.push({ nome: nome, data: new Date().toLocaleDateString('pt-BR'), hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5), timestamp: Date.now() });
+        const hoje = new Date().toLocaleDateString('pt-BR');
+        const batidasHoje = pontos.filter(p => p.nome === nome && p.data === hoje).length;
+        
+        if (batidasHoje >= 4) {
+            alert("⚠️ LIMITE ATINGIDO!\n" + nome + " já possui 4 registros hoje.");
+            location.reload(); return;
+        }
+
+        pontos.push({ 
+            id: Date.now() + Math.random(), 
+            nome: nome, 
+            data: hoje, 
+            hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5) 
+        });
         localStorage.setItem('radar_pontos', JSON.stringify(pontos));
-        alert("Ponto registrado!"); location.reload();
+        alert("Ponto " + (batidasHoje + 1) + "/4 registrado!");
+        location.reload();
     }
 
-    // LÓGICA DE CÁLCULO DE HORAS
+    // GESTÃO ADMINISTRATIVA E EDIÇÃO
+    function entrarNoAdm() {
+        if (prompt("Senha ADM:") === 'radar2025') {
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('admin-app').classList.remove('hidden');
+            gerarRelatorios();
+        }
+    }
+
+    function editarBatida(nome, dia) {
+        let pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
+        let batidasDia = pontos.filter(p => p.nome === nome && p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
+        
+        const labels = ["ENTRADA", "ALMOÇO", "V. ALMOÇO", "SAÍDA"];
+        
+        for(let i=0; i<4; i++) {
+            let horaAtual = batidasDia[i] ? batidasDia[i].hora : "--:--";
+            let novaHora = prompt(`Editar ${labels[i]} do dia ${dia}\n(Deixe vazio para não alterar ou digite no formato 00:00):`, horaAtual);
+            
+            if (novaHora && novaHora !== horaAtual) {
+                if (batidasDia[i]) {
+                    batidasDia[i].hora = novaHora; // Edita existente
+                } else {
+                    pontos.push({ id: Date.now()+i, nome: nome, data: dia, hora: novaHora }); // Cria novo se faltava
+                }
+            }
+        }
+        localStorage.setItem('radar_pontos', JSON.stringify(pontos));
+        gerarRelatorios();
+    }
+
     function calcularDiferenca(h1, h2) {
-        if (!h1 || !h2 || h1 === '-' || h2 === '-') return 0;
+        if (!h1 || h1 === '-' || !h2 || h2 === '-') return 0;
         const [hh1, mm1] = h1.split(':').map(Number);
         const [hh2, mm2] = h2.split(':').map(Number);
         return (hh2 * 60 + mm2) - (hh1 * 60 + mm1);
@@ -135,14 +173,6 @@
         return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     }
 
-    function entrarNoAdm() {
-        if (prompt("Senha:") === 'radar2025') {
-            document.getElementById('main-app').classList.add('hidden');
-            document.getElementById('admin-app').classList.remove('hidden');
-            gerarRelatorios();
-        }
-    }
-
     function gerarRelatorios() {
         const pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
         const biometria = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
@@ -150,53 +180,38 @@
 
         Object.keys(biometria).forEach(nome => {
             let totalMes = 0;
-            let totalSemana = 0;
-            const hoje = new Date();
-            const inicioSemana = new Date(hoje.setDate(hoje.getDate() - hoje.getDay()));
-
             let tabelaCorpo = '';
             const meusPontos = pontos.filter(p => p.nome === nome);
-            const dias = [...new Set(meusPontos.map(p => p.data))].sort();
+            const dias = [...new Set(meusPontos.map(p => p.data))].sort((a,b) => {
+                const partsA = a.split('/'); const partsB = b.split('/');
+                return new Date(partsA[2], partsA[1]-1, partsA[0]) - new Date(partsB[2], partsB[1]-1, partsB[0]);
+            });
 
             dias.forEach(dia => {
                 const b = meusPontos.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
                 const h = [b[0]?.hora || '-', b[1]?.hora || '-', b[2]?.hora || '-', b[3]?.hora || '-'];
-                
-                // Cálculo: (Almoço - Entrada) + (Saída - Volta)
-                const turno1 = calcularDiferenca(h[0], h[1]);
-                const turno2 = calcularDiferenca(h[2], h[3]);
-                const totalDiaMin = turno1 + turno2;
-                
-                totalMes += totalDiaMin;
-                
-                // Verificar se é desta semana
-                const [d, m, y] = dia.split('/').map(Number);
-                if (new Date(y, m-1, d) >= inicioSemana) totalSemana += totalDiaMin;
+                const totalDia = calcularDiferenca(h[0], h[1]) + calcularDiferenca(h[2], h[3]);
+                totalMes += totalDia;
 
-                tabelaCorpo += `<tr><td>${dia}</td><td>${h[0]}</td><td>${h[1]}</td><td>${h[2]}</td><td>${h[3]}</td><td><b>${formatarMinutos(totalDiaMin)}</b></td></tr>`;
+                tabelaCorpo += `<tr>
+                    <td>${dia}</td>
+                    <td>${h[0]}</td><td>${h[1]}</td><td>${h[2]}</td><td>${h[3]}</td>
+                    <td><b>${formatarMinutos(totalDia)}</b></td>
+                    <td class="no-print"><button class="btn-edit" onclick="editarBatida('${nome}','${dia}')">✏️ Editar</button></td>
+                </tr>`;
             });
 
             html += `
-                <div style="margin-bottom: 50px; page-break-after: always; border: 1px solid #eee; padding: 20px;">
-                    <center><div class="logo-text">RADAR</div><p>Folha de Ponto: <b>${nome}</b></p></center>
-                    
-                    <div class="resumo-horas">
-                        <span>TOTAL NA SEMANA: ${formatarMinutos(totalSemana)}h</span>
-                        <span>TOTAL NO MÊS: ${formatarMinutos(totalMes)}h</span>
-                    </div>
-
+                <div style="margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 20px;">
+                    <center><div class="logo-text">RADAR</div><p>Colaborador: <b>${nome}</b></p></center>
+                    <div class="resumo-horas"><span>TOTAL ACUMULADO NO RELATÓRIO: ${formatarMinutos(totalMes)}h</span></div>
                     <table>
-                        <thead><tr><th>Data</th><th>ENTRADA</th><th>ALMOÇO</th><th>V. ALMOÇO</th><th>SAÍDA</th><th>TOTAL DIA</th></tr></thead>
+                        <thead><tr><th>Data</th><th>ENTRADA</th><th>ALMOÇO</th><th>V. ALMOÇO</th><th>SAÍDA</th><th>TOTAL</th><th class="no-print">AÇÃO</th></tr></thead>
                         <tbody>${tabelaCorpo}</tbody>
                     </table>
-                    
-                    <div style="display: flex; justify-content: space-between; margin-top: 60px;">
-                        <div style="border-top: 1px solid #000; width: 40%; text-align: center; font-size: 10px;">Assinatura do Colaborador</div>
-                        <div style="border-top: 1px solid #000; width: 40%; text-align: center; font-size: 10px;">Assinatura Radar Comercial</div>
-                    </div>
                 </div>`;
         });
-        document.getElementById('lista-relatorios').innerHTML = html || 'Sem registros.';
+        document.getElementById('lista-relatorios').innerHTML = html || 'Sem dados.';
     }
 
     carregarIA();
