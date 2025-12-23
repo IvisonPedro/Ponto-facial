@@ -3,56 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teste Facial Radar</title>
+    <title>Radar - Biometria Facial</title>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f0f2f5; padding: 20px; }
-        #video-container { position: relative; border-radius: 15px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.2); background: #000; width: 320px; height: 240px; }
-        video, canvas { position: absolute; top: 0; left: 0; }
-        #status { margin-bottom: 15px; padding: 10px; border-radius: 8px; font-weight: bold; background: white; width: 300px; text-align: center; }
-        .error { color: #dc2626; border: 1px solid #dc2626; }
-        .success { color: #16a34a; }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; background: #f1f5f9; margin: 0; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
+        #video-container { position: relative; width: 320px; height: 240px; background: #000; border-radius: 10px; overflow: hidden; margin: 15px auto; }
+        video, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        #status { font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; color: #2563eb; }
+        .btn { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="status">Iniciando sistema...</div>
-    
-    <div id="video-container">
-        <video id="video" width="320" height="240" autoplay muted playsinline></video>
+    <div class="card">
+        <h3>Radar Comercial</h3>
+        <div id="status">Iniciando IA...</div>
+        
+        <div id="video-container" class="hidden">
+            <video id="video" autoplay muted playsinline></video>
+        </div>
+
+        <button id="btnIniciar" class="btn hidden" onclick="iniciarCamera()">REGISTRAR PONTO</button>
     </div>
 
     <script>
-        const video = document.getElementById('video');
         const status = document.getElementById('status');
+        const video = document.getElementById('video');
+        const videoContainer = document.getElementById('video-container');
+        const btnIniciar = document.getElementById('btnIniciar');
 
-        async function iniciar() {
+        // Carregar modelos de um servidor externo para evitar erros de pasta
+        async function carregarModelos() {
             try {
-                status.innerText = "⏳ Carregando modelos da pasta /models...";
+                const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
                 
-                // Carregando os modelos com tratamento de erro individual
-                await faceapi.nets.tinyFaceDetector.loadFromUri('./models');
-                await faceapi.nets.faceLandmark68Net.loadFromUri('./models');
-                await faceapi.nets.faceRecognitionNet.loadFromUri('./models');
-                
-                status.innerText = "✅ Modelos carregados! Abrindo câmera...";
-                status.className = "success";
-
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" } 
-                });
-                video.srcObject = stream;
+                status.innerText = "SISTEMA PRONTO";
+                btnIniciar.classList.remove('hidden');
             } catch (err) {
-                status.innerText = "❌ ERRO: Verifique se os nomes dos arquivos na pasta /models estão corretos no GitHub.";
-                status.className = "error";
+                status.innerText = "Erro ao carregar IA do servidor.";
                 console.error(err);
             }
         }
 
-        video.addEventListener('play', () => {
+        async function iniciarCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                video.srcObject = stream;
+                videoContainer.classList.remove('hidden');
+                btnIniciar.innerText = "IDENTIFICANDO...";
+                btnIniciar.disabled = true;
+                detectarRosto();
+            } catch (err) {
+                alert("Erro ao acessar câmera: " + err);
+            }
+        }
+
+        async function detectarRosto() {
             const canvas = faceapi.createCanvasFromMedia(video);
-            document.getElementById('video-container').append(canvas);
-            const displaySize = { width: video.width, height: video.height };
+            videoContainer.append(canvas);
+            const displaySize = { width: 320, height: 240 };
             faceapi.matchDimensions(canvas, displaySize);
 
             setInterval(async () => {
@@ -62,17 +76,17 @@
                 canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
                 faceapi.draw.drawDetections(canvas, resizedDetections);
                 
-                if(detections.length > 0) {
-                    status.innerText = "👤 ROSTO DETECTADO";
-                    status.style.backgroundColor = "#dcfce7";
+                if (detections.length > 0) {
+                    status.innerText = "ROSTO DETECTADO!";
+                    status.style.color = "green";
                 } else {
-                    status.innerText = "🔍 PROCURANDO ROSTO...";
-                    status.style.backgroundColor = "white";
+                    status.innerText = "POSICIONE SEU ROSTO";
+                    status.style.color = "red";
                 }
             }, 200);
-        });
+        }
 
-        iniciar();
+        carregarModelos();
     </script>
 </body>
 </html>
