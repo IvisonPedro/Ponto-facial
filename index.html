@@ -3,29 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radar Ponto - Gestão Pro Cloud</title>
+    <title>Radar Ponto - Oficial</title>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
         :root { --primary: #003366; --radar-red: #dc2626; --success: #16a34a; --bg: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
-        .logo-text { font-size: 32px; font-weight: 900; color: var(--radar-red); letter-spacing: 3px; border: 4px solid var(--radar-red); display: inline-block; padding: 5px 20px; border-radius: 4px; }
-        .clock-display { background: #1e293b; color: white; padding: 25px 10px; border-radius: 20px; margin: 20px 0; }
-        .time { font-size: 3rem; font-weight: 800; font-family: monospace; }
+        .logo-text { font-size: 32px; font-weight: 900; color: var(--radar-red); letter-spacing: 2px; border: 4px solid var(--radar-red); display: inline-block; padding: 5px 15px; border-radius: 4px; }
+        .clock-display { background: #1e293b; color: white; padding: 20px 10px; border-radius: 20px; margin: 20px 0; }
+        .time { font-size: 3rem; font-weight: 800; font-family: monospace; line-height: 1; }
         #video-container { width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; border: 4px solid #e2e8f0; }
         video { width: 100%; display: block; transform: scaleX(-1); }
-        button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-main { background: var(--primary); color: white; width: 100%; }
+        button { padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .btn-main { background: var(--primary); color: white; width: 100%; padding: 18px; font-size: 16px; }
         .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; font-size: 11px; }
-        .btn-edit { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 11px; }
-        .admin-screen { width: 100%; max-width: 1000px; background: white; padding: 30px; border-radius: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-        th, td { border: 1px solid #000; padding: 8px; text-align: center; }
-        .section-title { background: #334155; color: white; padding: 10px; margin: 20px 0 10px 0; border-radius: 8px; font-size: 14px; }
+        .btn-danger { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+        .btn-edit { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .admin-screen { width: 100%; max-width: 900px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        th, td { border: 1px solid #000; padding: 10px; text-align: center; }
+        th { background: #f8fafc; }
+        .resumo-box { background: #f1f5f9; padding: 15px; margin-top: 0; border: 1px solid #000; border-top: none; font-weight: bold; display: flex; justify-content: space-between; font-size: 13px; }
+        .section-title { background: #334155; color: white; padding: 12px; margin: 25px 0 10px 0; border-radius: 8px; font-size: 14px; text-transform: uppercase; font-weight: bold; }
         .hidden { display: none !important; }
-        @media print { .no-print { display: none !important; } .page-break { page-break-after: always; } }
+        @media print { 
+            .no-print { display: none !important; } 
+            body { background: white; }
+            .admin-screen { box-shadow: none; width: 100%; padding: 0; }
+            .page-break { page-break-after: always; border-bottom: 1px solid #eee; margin-bottom: 30px; }
+        }
     </style>
 </head>
 <body>
@@ -35,30 +42,30 @@
         <div class="logo-text">RADAR</div>
         <div class="clock-display">
             <div id="txt-time" class="time">00:00:00</div>
-            <div id="txt-date">---</div>
+            <div id="txt-date" style="margin-top:5px; font-size: 14px; opacity: 0.8;">---</div>
         </div>
         <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
         <button id="btn-ponto" class="btn-main" onclick="iniciarLeitura(false)">REGISTRAR MEU PONTO</button>
-        <button style="background:transparent; color:#64748b; text-decoration:underline; margin-top:15px; width:100%;" onclick="entrarNoAdm()">Acesso Restrito</button>
+        <button style="background:transparent; color:#64748b; text-decoration:underline; margin-top:20px; width:100%;" onclick="entrarNoAdm()">Painel Administrativo</button>
     </div>
 </div>
 
 <div class="container hidden" id="admin-app">
     <div class="admin-screen">
         <div class="no-print">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <button class="btn-edit" style="padding: 10px 20px;" onclick="location.reload()">⬅ Voltar</button>
-                <button class="btn-success" style="padding: 10px 20px;" onclick="irParaCadastro()">+ Novo Funcionário</button>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <button class="btn-edit" onclick="location.reload()">⬅ Sair</button>
+                <button class="btn-success" onclick="irParaCadastro()">+ Novo Funcionário</button>
             </div>
 
-            <div class="section-title">👥 GERENCIAR COLABORADORES (BIOMETRIA)</div>
+            <div class="section-title">👥 Colaboradores Cadastrados</div>
             <div id="lista-usuarios" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;"></div>
 
-            <div class="section-title">📅 RELATÓRIO E EDIÇÃO DE PONTOS</div>
-            <div style="display: flex; gap: 10px; align-items: center; background: #f8fafc; padding: 15px; border-radius: 10px;">
-                <input type="month" id="filtro-mes" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+            <div class="section-title">📊 Relatórios de Ponto</div>
+            <div style="background: #f8fafc; padding: 15px; border-radius: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="month" id="filtro-mes" style="padding: 10px; border-radius: 6px; border: 1px solid #ddd;">
                 <button class="btn-success" onclick="renderizarRelatorios()">🔍 Gerar Relatório</button>
-                <button class="btn-edit" id="btn-print" onclick="window.print()" style="display:none;">🖨️ PDF</button>
+                <button class="btn-edit" id="btn-print" onclick="imprimirRelatorio()" style="display:none;">📄 Gerar PDF</button>
             </div>
         </div>
 
@@ -82,77 +89,54 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-    const JORNADA_MIN = 525; // 8h45
+    const JORNADA_DIARIA = 525; // 8h45min em minutos
     let faceMatcher = null;
 
     setInterval(() => {
         const agora = new Date();
         document.getElementById('txt-time').innerText = agora.toLocaleTimeString('pt-BR');
-        document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+        document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     }, 1000);
 
-    async function carregarSistema() {
+    async function carregarIA() {
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-        
         onSnapshot(collection(db, "biometria"), (s) => {
             const desc = [];
             const lista = document.getElementById('lista-usuarios');
             lista.innerHTML = '';
             s.forEach(d => {
                 desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)]));
-                lista.innerHTML += `<div style="background:white; border:1px solid #ddd; padding:8px; border-radius:8px; text-align:center;">
-                    <small>${d.id}</small><br>
-                    <button class="btn-danger" style="padding:2px 5px; margin-top:5px;" onclick="excluirFuncionario('${d.id}')">Excluir</button>
+                lista.innerHTML += `<div style="background:white; border:1px solid #ddd; padding:10px; border-radius:8px; text-align:center;">
+                    <b style="font-size:12px;">${d.id}</b><br>
+                    <button class="btn-danger" style="padding:4px 8px; margin-top:5px; font-size:10px;" onclick="excluirFuncionario('${d.id}')">Excluir</button>
                 </div>`;
             });
             faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.6) : null;
         });
     }
 
-    // --- FUNÇÕES DE EDIÇÃO E EXCLUSÃO ---
-    window.excluirFuncionario = async (nome) => {
-        if(confirm(`Remover biometria de ${nome}? Ele não poderá mais registrar ponto.`)) {
-            await deleteDoc(doc(db, "biometria", nome));
-        }
+    function diffMinutos(h1, h2) {
+        if(!h1 || !h2 || h1==='-' || h2==='-') return 0;
+        const [aH, aM] = h1.split(':').map(Number);
+        const [bH, bM] = h2.split(':').map(Number);
+        return (bH * 60 + bM) - (aH * 60 + aM);
     }
 
-    window.limparDiaPonto = async (nome, data) => {
-        if(confirm(`Excluir todas as batidas de ${nome} no dia ${data}?`)) {
-            const q = query(collection(db, "pontos"), where("nome", "==", nome), where("data", "==", data));
-            const snap = await getDocs(q);
-            snap.forEach(async d => await deleteDoc(doc(db, "pontos", d.id)));
-            renderizarRelatorios();
-        }
+    function formatarH(min) {
+        const h = Math.floor(Math.abs(min) / 60);
+        const m = Math.abs(min) % 60;
+        return `${min < 0 ? '-' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     }
 
-    window.editarDiaPonto = async (nome, data) => {
-        const h1 = prompt("Nova Entrada 1 (Ex: 08:00):", "08:00");
-        const h2 = prompt("Nova Saída 1 (Ex: 12:00):", "12:00");
-        const h3 = prompt("Nova Entrada 2 (Ex: 13:00):", "13:00");
-        const h4 = prompt("Nova Saída 2 (Ex: 17:45):", "17:45");
-        
-        if(h1 && h2 && h3 && h4) {
-            // Limpa o dia primeiro
-            const q = query(collection(db, "pontos"), where("nome", "==", nome), where("data", "==", data));
-            const snap = await getDocs(q);
-            for(let d of snap.docs) await deleteDoc(doc(db, "pontos", d.id));
-            
-            // Adiciona as novas
-            const horas = [h1, h2, h3, h4];
-            for(let h of horas) {
-                await addDoc(collection(db, "pontos"), { nome, data, hora: h, timestamp: Date.now() });
-            }
-            alert("Dia atualizado!");
-            renderizarRelatorios();
-        }
-    }
+    window.imprimirRelatorio = () => { window.print(); }
 
-    // --- RELATÓRIO ---
+    window.excluirFuncionario = async (n) => { if(confirm(`Excluir ${n}?`)) await deleteDoc(doc(db,"biometria",n)); }
+
     window.renderizarRelatorios = async () => {
         const mesFiltro = document.getElementById('filtro-mes').value;
-        if (!mesFiltro) return alert("Selecione o mês");
+        if (!mesFiltro) return alert("Selecione o mês!");
         const [ano, mes] = mesFiltro.split('-');
         const dataBusca = `/${mes}/${ano}`;
 
@@ -166,27 +150,37 @@
 
         nomes.forEach(nome => {
             const pUser = pontos.filter(p => p.nome === nome);
-            const dias = [...new Set(pUser.map(p => p.data))].sort();
+            const dias = [...new Set(pUser.map(p => p.data))].sort((a,b) => a.localeCompare(b));
+            let saldoTotal = 0;
             let linhas = '';
-            
+
             dias.forEach(dia => {
                 const b = pUser.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
+                let trab = diffMinutos(b[0]?.hora, b[1]?.hora) + diffMinutos(b[2]?.hora, b[3]?.hora);
+                let saldoDia = trab > 0 ? trab - JORNADA_DIARIA : 0;
+                saldoTotal += saldoDia;
+
                 linhas += `<tr>
                     <td>${dia}</td><td>${b[0]?.hora || '-'}</td><td>${b[1]?.hora || '-'}</td>
                     <td>${b[2]?.hora || '-'}</td><td>${b[3]?.hora || '-'}</td>
-                    <td class="no-print">
-                        <button class="btn-edit" onclick="editarDiaPonto('${nome}','${dia}')">✏️</button>
-                        <button class="btn-danger" onclick="limparDiaPonto('${nome}','${dia}')">🗑️</button>
-                    </td>
+                    <td>${formatarH(trab)}</td><td style="color:${saldoDia<0?'red':'green'}">${formatarH(saldoDia)}</td>
                 </tr>`;
             });
-            html += `<div class="page-break"><h3>${nome} - Período ${mes}/${ano}</h3><table><thead><tr><th>DATA</th><th>E1</th><th>S1</th><th>E2</th><th>S2</th><th class="no-print">AÇÕES</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+
+            html += `<div class="page-break">
+                <h3 style="margin-bottom:5px;">Radar Comercial LTDA</h3>
+                <p style="margin:0 0 10px 0;"><b>Funcionário:</b> ${nome} | <b>Mês:</b> ${mes}/${ano}</p>
+                <table><thead><tr><th>DATA</th><th>E1</th><th>S1</th><th>E2</th><th>S2</th><th>TOTAL</th><th>SALDO</th></tr></thead><tbody>${linhas}</tbody></table>
+                <div class="resumo-box">
+                    <span>JORNADA PADRÃO: 08:45</span>
+                    <span>SALDO ACUMULADO: <span style="color:${saldoTotal<0?'red':'green'}">${formatarH(saldoTotal)}</span></span>
+                </div>
+            </div>`;
         });
         document.getElementById('relatorios-container').innerHTML = html || 'Sem dados.';
-        document.getElementById('btn-print').style.display = 'block';
+        document.getElementById('btn-print').style.display = 'inline-block';
     }
 
-    // --- BIOMETRIA E PONTO ---
     window.iniciarLeitura = async (cadastro) => {
         const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
         const video = document.getElementById('video');
@@ -206,10 +200,10 @@
                         const hoje = new Date().toLocaleDateString('pt-BR');
                         const q = query(collection(db, "pontos"), where("nome", "==", res.label), where("data", "==", hoje));
                         const s = await getDocs(q);
-                        if (s.size >= 4) return alert("Limite de 4 batidas diárias atingido.");
+                        if (s.size >= 4) return alert("Limite de 4 batidas atingido.");
                         await addDoc(collection(db, "pontos"), { nome: res.label, data: hoje, hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5), timestamp: Date.now() });
-                        alert("Ponto registrado com sucesso!");
-                    } else alert("Rosto não identificado.");
+                        alert("Ponto batido com sucesso!");
+                    } else alert("Não reconhecido.");
                     location.reload();
                 }
             }
@@ -217,9 +211,9 @@
     }
 
     window.entrarNoAdm = () => { if(prompt("Senha:")==='radar2025'){ document.getElementById('main-app').classList.add('hidden'); document.getElementById('admin-app').classList.remove('hidden'); }};
-    window.irParaCadastro = () => { document.getElementById('admin-app').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); document.getElementById('btn-ponto').innerText = "CAPTURAR ROSTO"; document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true); };
+    window.irParaCadastro = () => { document.getElementById('admin-app').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); document.getElementById('btn-ponto').innerText = "CAPTURAR NOVO ROSTO"; document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true); };
 
-    carregarSistema();
+    carregarIA();
 </script>
 </body>
 </html>
