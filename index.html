@@ -2,87 +2,210 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radar - Teste Facial</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Radar Ponto - Biometria Facial</title>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #f0f2f5; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        #video-container { position: relative; width: 300px; height: 225px; margin: 15px auto; background: #000; border-radius: 10px; overflow: hidden; display: none; }
+        :root { --primary: #2563eb; --success: #16a34a; --danger: #dc2626; --warning: #f59e0b; --bg: #f1f5f9; --text: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: var(--text); }
+        .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .card { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
+        .hidden { display: none !important; }
+        
+        /* Câmera */
+        #video-container { position: relative; width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden; margin: 15px 0; }
         video, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        #status { margin: 15px; color: #2563eb; font-weight: bold; min-height: 20px; }
-        .btn { background: #2563eb; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        
+        .main-clock { font-size: 3rem; font-weight: bold; margin: 10px 0; color: var(--primary); }
+        button { width: 100%; padding: 15px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-bottom: 10px; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+
+        /* Estilo PDF (Impressão) */
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; }
+        th, td { border: 1px solid #000; padding: 6px; text-align: center; }
+        .signature-container { display: none; justify-content: space-between; margin-top: 40px; }
+        .sig-box { border-top: 1px solid #000; width: 45%; font-size: 10px; font-weight: bold; padding-top: 5px; }
+
+        @media print {
+            .no-print { display: none !important; }
+            .relatorio-func { page-break-after: always; padding: 20px; background: white; }
+            .signature-container { display: flex !important; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>Radar Comercial</h2>
-        <div id="status">Aguardando comando...</div>
-        
-        <div id="video-container">
-            <video id="video" autoplay muted playsinline></video>
-        </div>
-
-        <button id="btnPlay" class="btn" onclick="configurarSistema()">CARREGAR E INICIAR</button>
+<div class="container no-print" id="app">
+    <div id="loading" class="card">
+        <h3>Radar Comercial</h3>
+        <p>Carregando Inteligência Facial...</p>
     </div>
 
-    <script>
-        const status = document.getElementById('status');
-        const video = document.getElementById('video');
-        const container = document.getElementById('video-container');
-        const btn = document.getElementById('btnPlay');
+    <div id="main-card" class="card hidden">
+        <h2 id="user-display">Radar Comercial</h2>
+        <div id="relogio" class="main-clock">00:00:00</div>
+        
+        <div id="video-container" class="hidden">
+            <video id="video" autoplay muted playsinline></video>
+        </div>
+        
+        <p id="status-ia">Pronto para iniciar</p>
+        
+        <button id="btn-auth" class="btn-primary" onclick="iniciarValidacao()">REGISTRAR PONTO</button>
+        <button id="btn-ponto" class="btn-success hidden" onclick="confirmarBatida()">CONFIRMAR BATIDA</button>
+        <button id="btn-adm" class="btn-primary" style="background:#6366f1" onclick="abrirGestao()">GESTÃO ADM</button>
+    </div>
+</div>
 
-        async function configurarSistema() {
-            btn.disabled = true;
-            status.innerText = "⏳ Carregando Modelos... (Pode demorar)";
+<div id="admin-area" class="container hidden">
+    <div class="card no-print">
+        <h3>Painel de Gestão</h3>
+        <button class="btn-primary" onclick="window.print()">🖨️ Imprimir Folhas</button>
+        <button class="btn-danger" onclick="fecharGestao()">Voltar</button>
+    </div>
+    <div id="relatorio-conteudo" style="width: 100%; background: white;"></div>
+</div>
+
+<script>
+    let faceMatcher = null;
+    const JORNADA_MIN = 525;
+    const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+
+    // Iniciar Modelos
+    async function init() {
+        try {
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
             
-            try {
-                // Usando uma URL de CDN alternativa para os modelos
-                const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-                
-                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-                
-                status.innerText = "⏳ Abrindo Câmera...";
-                
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "user" } 
-                });
-                
-                video.srcObject = stream;
-                container.style.display = "block";
-                btn.style.display = "none";
-                
-                iniciarDeteccao();
-            } catch (err) {
-                status.innerText = "❌ ERRO: " + err.message;
-                console.error(err);
-                btn.disabled = false;
-                btn.innerText = "TENTAR NOVAMENTE";
-            }
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('main-card').classList.remove('hidden');
+            atualizarRelogio();
+            setInterval(atualizarRelogio, 1000);
+            treinarIA();
+        } catch (e) {
+            document.getElementById('loading').innerText = "Erro ao carregar IA. Recarregue a página.";
         }
+    }
 
-        async function iniciarDeteccao() {
-            const canvas = faceapi.createCanvasFromMedia(video);
-            container.append(canvas);
-            const displaySize = { width: 300, height: 225 };
-            faceapi.matchDimensions(canvas, displaySize);
+    function atualizarRelogio() {
+        document.getElementById('relogio').innerText = new Date().toLocaleTimeString('pt-BR');
+    }
 
-            setInterval(async () => {
-                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
-                canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-                
-                if (detections.length > 0) {
-                    status.innerText = "✅ ROSTO IDENTIFICADO";
-                    status.style.color = "green";
-                    faceapi.draw.drawDetections(canvas, faceapi.resizeResults(detections, displaySize));
+    // IA: Treinamento e Reconhecimento
+    function treinarIA() {
+        const faces = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
+        const descriptors = Object.keys(faces).map(nome => {
+            return new faceapi.LabeledFaceDescriptors(nome, [new Float32Array(faces[nome])]);
+        });
+        if (descriptors.length > 0) {
+            faceMatcher = new faceapi.FaceMatcher(descriptors, 0.6);
+        }
+    }
+
+    async function iniciarValidacao() {
+        document.getElementById('video-container').classList.remove('hidden');
+        document.getElementById('btn-auth').classList.add('hidden');
+        document.getElementById('status-ia').innerText = "Olhe para a câmera...";
+
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        const video = document.getElementById('video');
+        video.srcObject = stream;
+
+        const loop = setInterval(async () => {
+            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                .withFaceLandmarks()
+                .withFaceDescriptor();
+
+            if (detection) {
+                if (!faceMatcher) {
+                    // Primeiro cadastro (Diogo)
+                    const nome = prompt("Nenhum rosto cadastrado. Digite seu nome para cadastrar:");
+                    if (nome) {
+                        const banco = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
+                        banco[nome] = Array.from(detection.descriptor);
+                        localStorage.setItem('radar_biometria', JSON.stringify(banco));
+                        location.reload();
+                    }
+                    clearInterval(loop);
                 } else {
-                    status.innerText = "🔍 POSICIONE O ROSTO";
-                    status.style.color = "#2563eb";
+                    const match = faceMatcher.findBestMatch(detection.descriptor);
+                    if (match.label !== 'unknown') {
+                        document.getElementById('status-ia').innerHTML = `<b style="color:green">Identificado: ${match.label}</b>`;
+                        window.usuarioLogado = match.label;
+                        document.getElementById('btn-ponto').classList.remove('hidden');
+                        clearInterval(loop);
+                        stream.getTracks().forEach(t => t.stop());
+                        document.getElementById('video-container').classList.add('hidden');
+                    }
                 }
-            }, 300);
-        }
-    </script>
+            }
+        }, 500);
+    }
+
+    function confirmarBatida() {
+        let pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
+        const agora = new Date();
+        pontos.push({
+            nome: window.usuarioLogado,
+            data: agora.toLocaleDateString('pt-BR'),
+            hora: agora.toLocaleTimeString('pt-BR').substring(0, 5)
+        });
+        localStorage.setItem('radar_pontos', JSON.stringify(pontos));
+        alert("Ponto registrado com sucesso!");
+        location.reload();
+    }
+
+    // Relatórios ADM
+    function abrirGestao() {
+        const senha = prompt("Senha ADM:");
+        if (senha !== 'radar2025') return alert("Acesso negado");
+        
+        document.getElementById('app').classList.add('hidden');
+        document.getElementById('admin-area').classList.remove('hidden');
+        renderizarRelatorio();
+    }
+
+    function fecharGestao() {
+        document.getElementById('app').classList.remove('hidden');
+        document.getElementById('admin-area').classList.add('hidden');
+    }
+
+    function renderizarRelatorio() {
+        const pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
+        const biometria = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
+        const nomes = Object.keys(biometria);
+        
+        let html = '';
+        nomes.forEach(nome => {
+            html += `<div class="relatorio-func">
+                <center><h2>RADAR COMERCIAL</h2><p>CNPJ: 08.286.530/0001-50 | Folha: ${nome}</p></center>
+                <table>
+                    <thead><tr><th>Data</th><th>ENTRADA</th><th>ALMOÇO</th><th>V. ALMOÇO</th><th>SAÍDA</th><th>Total</th></tr></thead>
+                    <tbody>`;
+            
+            const meusPontos = pontos.filter(p => p.nome === nome);
+            const dias = [...new Set(meusPontos.map(p => p.data))];
+            
+            dias.forEach(dia => {
+                const pDia = meusPontos.filter(p => p.data === dia).sort();
+                const b = [pDia[0]?.hora || '-', pDia[1]?.hora || '-', pDia[2]?.hora || '-', pDia[3]?.hora || '-'];
+                html += `<tr><td>${dia}</td><td>${b[0]}</td><td>${b[1]}</td><td>${b[2]}</td><td>${b[3]}</td><td>-</td></tr>`;
+            });
+
+            html += `</tbody></table>
+                <div class="signature-container">
+                    <div class="sig-box">Assinatura do Colaborador</div>
+                    <div class="sig-box">Assinatura da Empresa</div>
+                </div>
+            </div>`;
+        });
+        document.getElementById('relatorio-conteudo').innerHTML = html;
+    }
+
+    init();
+</script>
 </body>
 </html>
