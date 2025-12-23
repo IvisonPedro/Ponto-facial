@@ -3,52 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radar Ponto - Oficial</title>
+    <title>Radar Ponto - Sistema Cloud Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
-        :root { --primary: #003366; --radar-red: #dc2626; --accent: #2563eb; --success: #16a34a; --bg: #f8fafc; }
+        :root { --primary: #003366; --radar-red: #dc2626; --success: #16a34a; --bg: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
-        .logo-box { margin-bottom: 20px; }
         .logo-text { font-size: 32px; font-weight: 900; color: var(--radar-red); letter-spacing: 3px; border: 4px solid var(--radar-red); display: inline-block; padding: 5px 20px; border-radius: 4px; }
-        .logo-sub { font-size: 12px; text-transform: uppercase; color: #64748b; margin-top: 8px; letter-spacing: 1px; font-weight: bold; }
-        .clock-display { background: #1e293b; color: white; padding: 30px 10px; border-radius: 20px; margin: 20px 0; box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); }
-        .time { font-size: 3.5rem; font-weight: 800; font-family: monospace; line-height: 1; }
-        .date { font-size: 0.9rem; opacity: 0.7; margin-top: 10px; text-transform: uppercase; }
-        #video-container { position: relative; width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; border: 4px solid #e2e8f0; }
+        .clock-display { background: #1e293b; color: white; padding: 25px 10px; border-radius: 20px; margin: 20px 0; }
+        .time { font-size: 3rem; font-weight: 800; font-family: monospace; }
+        #video-container { width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; border: 4px solid #e2e8f0; }
         video { width: 100%; display: block; transform: scaleX(-1); }
-        button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1rem; }
+        button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1rem; }
         .btn-main { background: var(--primary); color: white; margin-top: 10px; }
         .btn-adm { background: transparent; color: #64748b; margin-top: 15px; font-size: 0.8rem; text-decoration: underline; }
-        .btn-edit { background: #f1f5f9; color: #475569; padding: 5px 10px; font-size: 10px; width: auto; border: 1px solid #cbd5e1; }
-        .btn-del { background: #fee2e2; color: #991b1b; padding: 5px 10px; font-size: 10px; width: auto; border: 1px solid #f87171; margin-left: 5px; }
-        .btn-new { background: var(--success); color: white; width: auto; padding: 10px 20px; font-size: 12px; }
-        .btn-backup { background: #64748b; color: white; width: auto; padding: 8px 15px; font-size: 11px; margin: 5px; }
-        .admin-screen { width: 100%; max-width: 950px; background: white; padding: 30px; border-radius: 20px; }
-        .cabecalho-empresa { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-        .cabecalho-empresa h2 { margin: 0; font-size: 22px; text-transform: uppercase; }
-        .cabecalho-empresa p { margin: 5px 0; font-size: 14px; }
-        .section-title { background: #334155; color: white; padding: 10px; margin-top: 25px; border-radius: 8px; font-size: 14px; text-align: left; display: flex; justify-content: space-between; align-items: center; }
-        .resumo-horas { display: flex; justify-content: space-around; background: #f1f5f9; padding: 15px; border-radius: 12px; margin: 15px 0; font-weight: bold; font-size: 14px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+        .admin-screen { width: 100%; max-width: 1000px; background: white; padding: 30px; border-radius: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
         th, td { border: 1px solid #000; padding: 8px; text-align: center; }
-        th { background: #eee; }
+        .resumo-horas { background: #f1f5f9; padding: 10px; margin-top: 5px; font-weight: bold; display: flex; justify-content: space-between; border: 1px solid #000; border-top: none; }
         .hidden { display: none !important; }
-        @media print { .no-print { display: none !important; } body { background: white; } .admin-screen { width: 100%; padding: 0; } }
+        .no-print { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        @media print { .no-print { display: none !important; } .admin-screen { width: 100%; padding: 0; } }
     </style>
 </head>
 <body>
 
 <div class="container no-print" id="main-app">
     <div class="card">
-        <div class="logo-box">
-            <div class="logo-text">RADAR</div>
-            <div class="logo-sub">Sistema de Ponto Eletrônico</div>
-        </div>
+        <div class="logo-text">RADAR</div>
         <div class="clock-display">
             <div id="txt-time" class="time">00:00:00</div>
-            <div id="txt-date" class="date">---</div>
+            <div id="txt-date">---</div>
         </div>
         <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
         <button id="btn-ponto" class="btn-main" onclick="iniciarLeitura(false)">REGISTRAR MEU PONTO</button>
@@ -58,24 +44,19 @@
 
 <div class="container hidden" id="admin-app">
     <div class="admin-screen">
-        <div class="no-print" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: center;">
-            <button class="btn-main" style="width: auto; padding: 10px 25px;" onclick="window.print()">🖨️ Imprimir Relatórios</button>
-            <button class="btn-main" style="width: auto; padding: 10px 25px; background: #64748b;" onclick="location.reload()">Sair do Painel</button>
-        </div>
-
         <div class="no-print">
-            <div class="section-title"><span>👥 GESTÃO DE COLABORADORES</span> <button class="btn-new" onclick="irParaCadastroAdm()">+ Cadastrar Novo</button></div>
-            <div id="lista-usuarios" style="display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
+            <input type="month" id="filtro-mes" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+            <button class="btn-main" style="width: auto; padding: 10px 20px;" onclick="renderizarRelatorios()">🔍 Filtrar Mês</button>
+            <button class="btn-main" style="width: auto; padding: 10px 20px; background: var(--success);" onclick="irParaCadastro()">+ Cadastrar Funcionário</button>
+            <button class="btn-main" style="width: auto; padding: 10px 20px; background: #64748b;" onclick="location.reload()">Sair</button>
         </div>
-
-        <div class="section-title" style="margin-top:40px">📄 ESPELHOS DE PONTO MENSAIS</div>
-        <div id="lista-relatorios"></div>
+        <div id="relatorios-container"></div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
@@ -88,163 +69,125 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
-    // --- VARIÁVEIS GLOBAIS ---
-    const JORNADA_DIARIA_MIN = 525; 
-    const NOME_EMPRESA = "Radar Comercial LTDA"; 
-    const CNPJ_EMPRESA = "08.286.530/0001-50";   
     const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+    const JORNADA_DIARIA_MINUTOS = 525; // 8h45min (Exemplo de jornada Radar)
     let faceMatcher = null;
 
-    // --- RECURSOS DO FIREBASE ---
-    async function sincronizarBiometria() {
-        const querySnapshot = await getDocs(collection(db, "biometria"));
-        const dados = {};
-        querySnapshot.forEach((doc) => { dados[doc.id] = doc.data().descriptor; });
-        localStorage.setItem('radar_biometria', JSON.stringify(dados));
-        treinarRostos();
-    }
-
-    async function salvarPontoNuvem(nome, data, hora) {
-        await addDoc(collection(db, "pontos"), { nome, data, hora, timestamp: Date.now() });
-    }
-
-    // --- FUNÇÕES ORIGINAIS ADAPTADAS ---
-    function moverRelogio() {
+    // Relógio
+    setInterval(() => {
         const agora = new Date();
         document.getElementById('txt-time').innerText = agora.toLocaleTimeString('pt-BR');
-        document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    }
+        document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    }, 1000);
 
     async function carregarIA() {
-        try {
-            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-            await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-            await sincronizarBiometria();
-            setInterval(moverRelogio, 1000);
-            moverRelogio();
-        } catch (e) { console.log("Erro IA"); }
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        onSnapshot(collection(db, "biometria"), (s) => {
+            const desc = [];
+            s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
+            faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.6) : null;
+        });
     }
 
-    function treinarRostos() {
-        const dados = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
-        const descriptors = Object.keys(dados).map(nome => new faceapi.LabeledFaceDescriptors(nome, [new Float32Array(dados[nome])]));
-        faceMatcher = descriptors.length > 0 ? new faceapi.FaceMatcher(descriptors, 0.6) : null;
+    function diffMinutos(h1, h2) {
+        const [aH, aM] = h1.split(':').map(Number);
+        const [bH, bM] = h2.split(':').map(Number);
+        return (bH * 60 + bM) - (aH * 60 + aM);
     }
 
-    window.iniciarLeitura = async function(eCadastro) {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-            const video = document.getElementById('video');
-            video.srcObject = stream;
-            const interval = setInterval(async () => {
-                const detect = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-                if (detect) {
-                    clearInterval(interval);
-                    stream.getTracks().forEach(t => t.stop());
-                    if (eCadastro) {
-                        const nome = prompt("Nome completo para cadastro:");
-                        if (nome) {
-                            await setDoc(doc(db, "biometria", nome), { descriptor: Array.from(detect.descriptor) });
-                            alert("Biometria enviada para nuvem!");
-                            location.reload();
-                        }
-                    } else {
-                        if (!faceMatcher) { alert("Nenhum usuário cadastrado."); location.reload(); }
-                        else {
-                            const res = faceMatcher.findBestMatch(detect.descriptor);
-                            if (res.label !== 'unknown') registrarPonto(res.label);
-                            else { alert("Rosto não reconhecido."); location.reload(); }
-                        }
-                    }
-                }
-            }, 600);
-        } catch (err) { alert("Erro câmera."); }
+    function formatarHoras(totalMin) {
+        const h = Math.floor(Math.abs(totalMin) / 60);
+        const m = Math.abs(totalMin) % 60;
+        return `${totalMin < 0 ? '-' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     }
 
-    async function registrarPonto(nome) {
-        const hoje = new Date().toLocaleDateString('pt-BR');
-        const agora = new Date().toLocaleTimeString('pt-BR').substring(0, 5);
-        await salvarPontoNuvem(nome, hoje, agora);
-        alert("Ponto registrado na nuvem: " + nome);
-        location.reload();
-    }
-
-    window.entrarNoAdm = function() {
-        if (prompt("Senha Master:") === 'radar2025') {
-            document.getElementById('main-app').classList.add('hidden');
-            document.getElementById('admin-app').classList.remove('hidden');
-            escutarPontosTempoReal();
-            renderizarUsuarios();
-        }
-    }
-
-    function escutarPontosTempoReal() {
+    window.renderizarRelatorios = async () => {
+        const mesFiltro = document.getElementById('filtro-mes').value; // Formato YYYY-MM
+        if (!mesFiltro) return alert("Selecione o mês");
+        
+        const [ano, mes] = mesFiltro.split('-');
+        const dataBusca = `/${mes}/${ano}`; 
+        
         const q = query(collection(db, "pontos"), orderBy("timestamp", "asc"));
-        onSnapshot(q, (snapshot) => {
-            const pontos = [];
-            snapshot.forEach(doc => pontos.push(doc.data()));
-            gerarRelatorios(pontos);
-        });
-    }
+        const snap = await getDocs(q);
+        const todosPontos = [];
+        snap.forEach(d => { if(d.data().data.includes(dataBusca)) todosPontos.push(d.data()); });
 
-    function renderizarUsuarios() {
-        const biometria = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
+        const nomes = [...new Set(todosPontos.map(p => p.nome))];
         let html = '';
-        Object.keys(biometria).forEach(nome => {
-            html += `<div style="background:white; padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1; font-size:11px; display:flex; align-items:center;">
-                <b>${nome}</b>
-            </div>`;
-        });
-        document.getElementById('lista-usuarios').innerHTML = html || 'Nenhum cadastro.';
-    }
 
-    function formatarMinutos(totalMin) {
-        const sinal = totalMin < 0 ? "-" : "";
-        const mAbs = Math.abs(totalMin);
-        return sinal + String(Math.floor(mAbs/60)).padStart(2,'0') + ":" + String(mAbs%60).padStart(2,'0');
-    }
+        nomes.forEach(nome => {
+            const pontosUser = todosPontos.filter(p => p.nome === nome);
+            const dias = [...new Set(pontosUser.map(p => p.data))];
+            let saldoTotalMes = 0;
+            let linhas = '';
 
-    function gerarRelatorios(pontos) {
-        const biometria = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
-        let html = '';
-        const todosNomes = [...new Set([...Object.keys(biometria), ...pontos.map(p => p.nome)])];
-
-        todosNomes.forEach(nome => {
-            let tT = 0; let tE = 0; let linhas = '';
-            const meusP = pontos.filter(p => p.nome === nome);
-            const dias = [...new Set(meusP.map(p => p.data))].sort((a,b) => {
-                const [dA, mA, yA] = a.split('/').map(Number); const [dB, mB, yB] = b.split('/').map(Number);
-                return new Date(yA, mA-1, dA) - new Date(yB, mB-1, dB);
-            });
-            if (dias.length === 0) return;
             dias.forEach(dia => {
-                const b = meusP.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
-                const h = [b[0]?.hora || '-', b[1]?.hora || '-', b[2]?.hora || '-', b[3]?.hora || '-'];
-                const h2m = (hora) => { if(hora==='-') return 0; const [hh,mm]=hora.split(':').map(Number); return hh*60+mm; };
-                const mD = (h2m(h[1]) - h2m(h[0])) + (h2m(h[3]) - h2m(h[2]));
-                const e = (b.length >= 4) ? (mD - JORNADA_DIARIA_MIN) : 0;
-                tT += mD; tE += e;
-                linhas += `<tr><td>${dia}</td><td>${h[0]}</td><td>${h[1]}</td><td>${h[2]}</td><td>${h[3]}</td><td>${formatarMinutos(mD)}</td><td style="color:${e<0?'red':'green'}">${formatarMinutos(e)}</td></tr>`;
+                const b = pontosUser.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
+                let minutosTrabalhados = 0;
+                if(b[0] && b[1]) minutosTrabalhados += diffMinutos(b[0].hora, b[1].hora);
+                if(b[2] && b[3]) minutosTrabalhados += diffMinutos(b[2].hora, b[3].hora);
+                
+                const extraDia = minutosTrabalhados - JORNADA_DIARIA_MINUTOS;
+                saldoTotalMes += extraDia;
+
+                linhas += `<tr>
+                    <td>${dia}</td><td>${b[0]?.hora || '-'}</td><td>${b[1]?.hora || '-'}</td>
+                    <td>${b[2]?.hora || '-'}</td><td>${b[3]?.hora || '-'}</td>
+                    <td>${formatarHoras(minutosTrabalhados)}</td><td>${formatarHoras(extraDia)}</td>
+                </tr>`;
             });
-            html += `<div style="page-break-after: always; margin-bottom: 40px; border-bottom: 1px solid #000; padding-bottom: 20px;">
-                <div class="cabecalho-empresa"><h2>${NOME_EMPRESA}</h2><p>CNPJ: ${CNPJ_EMPRESA}</p><p><b>RELATÓRIO DE FREQUÊNCIA</b></p></div>
-                <p>Colaborador(a): <b>${nome}</b></p>
-                <div class="resumo-horas"><span>TOTAL TRABALHADO: ${formatarMinutos(tT)}h</span><span style="color:${tE<0?'red':'#166534'}">SALDO EXTRAS: ${formatarMinutos(tE)}h</span></div>
-                <table><thead><tr><th>DATA</th><th>ENTRADA</th><th>ALMOÇO</th><th>RETORNO</th><th>SAÍDA</th><th>TOTAL</th><th>EXTRA</th></tr></thead><tbody>${linhas}</tbody></table>
+
+            html += `<div style="margin-bottom:50px; page-break-after: always;">
+                <h2>Radar Comercial LTDA - Espelho de Ponto</h2>
+                <p><b>Colaborador:</b> ${nome} | <b>Período:</b> ${mes}/${ano}</p>
+                <table>
+                    <thead><tr><th>DATA</th><th>ENTRADA</th><th>SAÍDA 1</th><th>VOLTA 2</th><th>SAÍDA FINAL</th><th>TOTAL DIA</th><th>EXTRA/NEG</th></tr></thead>
+                    <tbody>${linhas}</tbody>
+                </table>
+                <div class="resumo-horas">
+                    <span>JORNADA DIÁRIA BASE: 08:45</span>
+                    <span>SALDO TOTAL DO MÊS: ${formatarHoras(saldoTotalMes)}</span>
+                </div>
             </div>`;
         });
-        document.getElementById('lista-relatorios').innerHTML = html || 'Sem dados.';
+        document.getElementById('relatorios-container').innerHTML = html || 'Sem registros para este mês.';
     }
 
-    window.irParaCadastroAdm = function() {
-        document.getElementById('admin-app').classList.add('hidden');
-        document.getElementById('main-app').classList.remove('hidden');
-        alert("MODO CADASTRO: Aponte para o colaborador e clique no botão.");
-        document.getElementById('btn-ponto').innerText = "CAPTURAR BIOMETRIA";
-        document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true);
+    window.iniciarLeitura = async (cadastro) => {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+        const video = document.getElementById('video');
+        video.srcObject = stream;
+        const interval = setInterval(async () => {
+            const detect = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+            if (detect) {
+                clearInterval(interval);
+                stream.getTracks().forEach(t => t.stop());
+                if (cadastro) {
+                    const nome = prompt("Nome completo do Funcionário:");
+                    if (nome) await setDoc(doc(db, "biometria", nome), { descriptor: Array.from(detect.descriptor) });
+                    alert("Cadastrado com sucesso!");
+                    location.reload();
+                } else {
+                    const res = faceMatcher?.findBestMatch(detect.descriptor);
+                    if (res && res.label !== 'unknown') {
+                        const hoje = new Date().toLocaleDateString('pt-BR');
+                        const q = query(collection(db, "pontos"), where("nome", "==", res.label), where("data", "==", hoje));
+                        const s = await getDocs(q);
+                        if (s.size >= 4) return alert("Limite de 4 batidas diárias atingido.");
+                        await addDoc(collection(db, "pontos"), { nome: res.label, data: hoje, hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5), timestamp: Date.now() });
+                        alert(`Ponto registrado: ${res.label} (${s.size + 1}/4)`);
+                    } else alert("Rosto não identificado.");
+                    location.reload();
+                }
+            }
+        }, 600);
     }
+
+    window.entrarNoAdm = () => { if(prompt("Senha:")==='radar2025'){ document.getElementById('main-app').classList.add('hidden'); document.getElementById('admin-app').classList.remove('hidden'); }};
+    window.irParaCadastro = () => { document.getElementById('admin-app').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); document.getElementById('btn-ponto').innerText = "ESCANEAR NOVO FUNCIONÁRIO"; document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true); };
 
     carregarIA();
 </script>
