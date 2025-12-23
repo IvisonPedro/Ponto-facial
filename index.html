@@ -9,116 +9,84 @@
         :root { --primary: #003366; --success: #16a34a; --bg: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; justify-content: center; }
-        .card { background: white; width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; position: relative; }
+        .card { background: white; width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
         
-        .logo-container { margin-bottom: 20px; }
-        .logo-text { font-size: 32px; font-weight: 900; color: var(--primary); letter-spacing: 2px; border: 4px solid var(--primary); display: inline-block; padding: 5px 15px; border-radius: 4px; line-height: 1; text-transform: uppercase; }
-        .sub-logo { font-size: 10px; color: #64748b; font-weight: bold; margin-top: 8px; letter-spacing: 1px; text-transform: uppercase; }
-
-        .clock-display { background: #1e293b; color: white; padding: 20px 10px; border-radius: 20px; margin: 10px 0 20px 0; }
-        .time { font-size: 3rem; font-weight: 800; font-family: monospace; line-height: 1; }
+        .logo-text { font-size: 32px; font-weight: 900; color: var(--primary); letter-spacing: 2px; border: 4px solid var(--primary); display: inline-block; padding: 5px 15px; border-radius: 4px; text-transform: uppercase; }
+        .clock-display { background: #1e293b; color: white; padding: 20px; border-radius: 20px; margin: 20px 0; }
+        .time { font-size: 3rem; font-weight: 800; font-family: monospace; }
         
         #video-container { width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; border: 4px solid #e2e8f0; }
         video { width: 100%; display: block; transform: scaleX(-1); }
         
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-        button { padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; }
+        button { padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
-        .btn-edit { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
-
         .hidden { display: none !important; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
         th, td { border: 1px solid #000; padding: 8px; text-align: center; }
-        .resumo-box { background: #f1f5f9; padding: 10px; border: 1px solid #000; border-top: none; font-weight: bold; display: flex; justify-content: space-between; font-size: 11px; }
-        
-        @media print { .no-print { display: none !important; } .container { padding: 0; display: block; } .card { box-shadow: none; max-width: 100%; } .page-break { page-break-after: always; } }
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body>
 
 <div class="container" id="login-screen">
     <div class="card">
-        <h2 style="margin-top:0; color: #003366;">Portal de Acesso</h2>
-        <p style="color: #64748b;">Digite o código da empresa</p>
-        <input type="text" id="input-empresa" placeholder="Ex: radar" onkeyup="if(event.key==='Enter') validarEmpresa()">
-        <button class="btn-primary" onclick="validarEmpresa()">ACESSAR</button>
+        <h2>Acesso à Empresa</h2>
+        <input type="text" id="input-empresa" placeholder="Código da Empresa">
+        <button class="btn-primary" onclick="validarEmpresa()">ENTRAR</button>
     </div>
 </div>
 
 <div class="container hidden" id="super-adm-screen">
     <div class="card" style="max-width: 600px; text-align: left;">
         <h3>🚀 Painel do Revendedor</h3>
-        <div style="background: #f1f5f9; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-            <input type="text" id="new-id" placeholder="ID de Acesso (Ex: padaria1)">
-            <input type="text" id="new-nome" placeholder="Nome Fantasia (Ex: Padaria Silva)">
-            <input type="color" id="new-cor" value="#003366" style="height: 40px; cursor: pointer;">
-            <input type="text" id="new-senha" placeholder="Senha do Painel do Cliente">
-            <button class="btn-success" onclick="salvarNovaEmpresa()">CADASTRAR NOVO CLIENTE</button>
-        </div>
-        <h4>Clientes Ativos</h4>
-        <div id="lista-empresas"></div>
-        <button class="btn-edit" onclick="location.reload()">Sair do Painel</button>
+        <input type="text" id="new-id" placeholder="ID (ex: radar)">
+        <input type="text" id="new-nome" placeholder="Nome Fantasia">
+        <input type="color" id="new-cor" value="#003366">
+        <input type="text" id="new-senha" placeholder="Senha do Cliente">
+        <button class="btn-success" onclick="salvarNovaEmpresa()">CADASTRAR</button>
+        <div id="lista-empresas" style="margin-top: 20px;"></div>
+        <button onclick="location.reload()">Sair</button>
     </div>
 </div>
 
 <div class="container hidden" id="main-app">
     <div class="card">
-        <div class="logo-container">
-            <div id="company-logo" class="logo-text">CARREGANDO...</div>
-            <div class="sub-logo">sistema de ponto facial</div>
-        </div>
+        <div id="company-logo" class="logo-text">---</div>
         <div class="clock-display">
             <div id="txt-time" class="time">00:00:00</div>
-            <div id="txt-date" style="font-size: 14px; opacity: 0.8;">---</div>
+            <div id="txt-date" style="font-size: 14px;">---</div>
         </div>
         <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
-        <button id="btn-ponto" class="btn-primary" style="padding: 20px; font-size: 18px;" onclick="iniciarLeitura(false)">REGISTRAR MEU PONTO</button>
-        <button style="background:transparent; color:#64748b; text-decoration:underline; font-size: 13px; margin-top:15px;" onclick="entrarNoAdm()">Painel Administrativo</button>
-        <button style="background:transparent; color:#cbd5e1; font-size: 10px; margin-top: 10px;" onclick="location.href=location.origin+location.pathname">Trocar Empresa</button>
-    </div>
-</div>
-
-<div class="container hidden" id="admin-app">
-    <div class="card" style="max-width: 900px; text-align: left;">
-        <div class="no-print" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-            <button class="btn-edit" style="width: auto;" onclick="location.reload()">⬅ Sair</button>
-            <button class="btn-success" style="width: auto;" onclick="irParaCadastro()">+ Novo Funcionário</button>
-        </div>
-        <div class="no-print" id="lista-usuarios" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;"></div>
-        <div class="no-print" style="background: #f8fafc; padding: 15px; border-radius: 12px; display: flex; gap: 10px;">
-            <input type="month" id="filtro-mes">
-            <button class="btn-success" onclick="renderizarRelatorios()">🔍 Gerar Relatório</button>
-            <button class="btn-edit" id="btn-print" style="display:none; width: auto;" onclick="window.print()">🖨️ PDF</button>
-        </div>
-        <div id="relatorios-container"></div>
+        <button class="btn-primary" style="font-size: 18px;" onclick="iniciarLeitura(false)">REGISTRAR PONTO</button>
+        <button style="background:transparent; color:#64748b; text-decoration:underline;" onclick="entrarNoAdm()">Painel Administrativo</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, onSnapshot, query, orderBy, where, deleteDoc, writeBatch, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, onSnapshot, query, orderBy, where, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
         authDomain: "radar-ponto.firebaseapp.com",
         projectId: "radar-ponto",
         storageBucket: "radar-ponto.firebasestorage.app",
-        messagingSenderId: "957045066994",
         appId: "1:957045066994:web:740afa605071c69e3ed46b"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-    const JORNADA_DIARIA = 525;
-    
+    const audioBip = new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3');
+
     let empresaID = new URLSearchParams(window.location.search).get('id');
     let configAtual = null;
     let faceMatcher = null;
 
-    // --- SISTEMA DE LOGIN ---
+    // Login e Redirecionamento
     window.validarEmpresa = async () => {
         const id = document.getElementById('input-empresa').value.toLowerCase().trim();
         if (id === "admin-mestre") {
@@ -127,16 +95,15 @@
             carregarEmpresasMestre();
             return;
         }
-        const docRef = doc(db, "configuracoes_mestre", id);
-        const docSnap = await getDoc(docRef);
+        const docSnap = await getDoc(doc(db, "configuracoes_mestre", id));
         if (docSnap.exists()) {
             window.location.href = window.location.origin + window.location.pathname + "?id=" + id;
         } else {
             alert("Empresa não encontrada.");
         }
-    }
+    };
 
-    // --- REVENDA (SUPER ADM) ---
+    // Cadastro de Empresas (Super ADM)
     window.salvarNovaEmpresa = async () => {
         const id = document.getElementById('new-id').value.toLowerCase().trim();
         const dados = {
@@ -144,30 +111,25 @@
             cor: document.getElementById('new-cor').value,
             senha: document.getElementById('new-senha').value
         };
-        if(!id || !dados.nome) return alert("Preencha os campos!");
         await setDoc(doc(db, "configuracoes_mestre", id), dados);
-        alert("Cliente Salvo!");
+        alert("Empresa salva!");
         carregarEmpresasMestre();
-    }
+    };
 
     async function carregarEmpresasMestre() {
         const snap = await getDocs(collection(db, "configuracoes_mestre"));
         const lista = document.getElementById('lista-empresas');
         lista.innerHTML = "";
         snap.forEach(d => {
-            lista.innerHTML += `<div style="padding:10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;">
-                <span><b>${d.id}</b> - ${d.data().nome}</span>
-                <button onclick="excluirEmpresa('${d.id}')" style="width:auto; background:red; color:white; padding:5px 10px;">Remover</button>
-            </div>`;
+            lista.innerHTML += `<p><b>${d.id}</b> - ${d.data().nome} <button onclick="excluirEmpresa('${d.id}')">X</button></p>`;
         });
     }
-    window.excluirEmpresa = async (id) => { if(confirm("Remover cliente?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); carregarEmpresasMestre(); } }
 
-    // --- INICIALIZAÇÃO DO CLIENTE ---
+    // Inicialização Cliente
     if (empresaID) {
-        const docSnap = await getDoc(doc(db, "configuracoes_mestre", empresaID));
-        if (docSnap.exists()) {
-            configAtual = docSnap.data();
+        const snap = await getDoc(doc(db, "configuracoes_mestre", empresaID));
+        if (snap.exists()) {
+            configAtual = snap.data();
             document.documentElement.style.setProperty('--primary', configAtual.cor);
             document.getElementById('company-logo').innerText = configAtual.nome;
             document.getElementById('company-logo').style.color = configAtual.cor;
@@ -178,32 +140,7 @@
         }
     }
 
-    // --- LÓGICA DE PONTO E IA ---
-    setInterval(() => {
-        const agora = new Date();
-        document.getElementById('txt-time').innerText = agora.toLocaleTimeString('pt-BR');
-        document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    }, 1000);
-
-    async function carregarIA() {
-        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-        onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
-            const desc = [];
-            const lista = document.getElementById('lista-usuarios');
-            lista.innerHTML = '';
-            s.forEach(d => {
-                desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)]));
-                lista.innerHTML += `<div style="background:white; border:1px solid #ddd; padding:8px; border-radius:8px; text-align:center; min-width:100px;">
-                    <b style="font-size:11px;">${d.id}</b><br>
-                    <button class="btn-danger" style="padding:2px 5px; font-size:9px;" onclick="excluirFuncionario('${d.id}')">Excluir</button>
-                </div>`;
-            });
-            faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.6) : null;
-        });
-    }
-
+    // Lógica de Ponto sem Limite
     window.iniciarLeitura = async (cadastro) => {
         const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
         const video = document.getElementById('video');
@@ -214,68 +151,46 @@
                 clearInterval(interval);
                 stream.getTracks().forEach(t => t.stop());
                 if (cadastro) {
-                    const nome = prompt("Nome completo:");
+                    const nome = prompt("Nome:");
                     if (nome) await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { descriptor: Array.from(detect.descriptor) });
                     location.reload();
                 } else {
                     const res = faceMatcher?.findBestMatch(detect.descriptor);
                     if (res && res.label !== 'unknown') {
+                        audioBip.play(); // Toca o BIP
                         const hoje = new Date().toLocaleDateString('pt-BR');
-                        await addDoc(collection(db, `empresas/${empresaID}/pontos`), { nome: res.label, data: hoje, hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5), timestamp: Date.now() });
-                        alert("Ponto registrado para " + res.label);
-                    } else alert("Rosto não identificado.");
+                        await addDoc(collection(db, `empresas/${empresaID}/pontos`), { 
+                            nome: res.label, 
+                            data: hoje, 
+                            hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5), 
+                            timestamp: Date.now() 
+                        });
+                        alert("Ponto registrado: " + res.label);
+                    } else alert("Não reconhecido.");
                     location.reload();
                 }
             }
         }, 600);
-    }
+    };
 
-    // --- ADMINISTRAÇÃO ---
-    window.entrarNoAdm = () => { if(prompt("Senha:") === configAtual.senha) { document.getElementById('main-app').classList.add('hidden'); document.getElementById('admin-app').classList.remove('hidden'); } };
-    window.irParaCadastro = () => { document.getElementById('admin-app').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); document.getElementById('btn-ponto').innerText = "CAPTURAR ROSTO"; document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true); };
-    window.excluirFuncionario = async (n) => { if(confirm(`Excluir ${n}?`)) await deleteDoc(doc(db, `empresas/${empresaID}/biometria`, n)); }
-
-    window.editarDia = async (nome, data) => {
-        const h = [prompt("E1 (00:00):"), prompt("S1:"), prompt("E2:"), prompt("S2:")];
-        if(h.every(v => v)) {
-            const q = query(collection(db, `empresas/${empresaID}/pontos`), where("nome", "==", nome), where("data", "==", data));
-            const snap = await getDocs(q);
-            const batch = writeBatch(db);
-            snap.forEach(d => batch.delete(d.ref));
-            await batch.commit();
-            for(let hr of h) await addDoc(collection(db, `empresas/${empresaID}/pontos`), { nome, data, hora: hr, timestamp: Date.now() });
-            renderizarRelatorios();
-        }
-    }
-
-    window.renderizarRelatorios = async () => {
-        const mesFiltro = document.getElementById('filtro-mes').value;
-        if (!mesFiltro) return alert("Selecione o mês!");
-        const [ano, mes] = mesFiltro.split('-');
-        const dataBusca = `/${mes}/${ano}`;
-        const snap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
-        const pontos = [];
-        snap.forEach(d => { if(d.data().data.includes(dataBusca)) pontos.push(d.data()); });
-        const nomes = [...new Set(pontos.map(p => p.nome))];
-        let html = '';
-        nomes.forEach(nome => {
-            const pUser = pontos.filter(p => p.nome === nome);
-            const dias = [...new Set(pUser.map(p => p.data))].sort();
-            let saldoT = 0; let linhas = '';
-            dias.forEach(dia => {
-                const b = pUser.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
-                let trab = (diffMinutos(b[0]?.hora, b[1]?.hora) || 0) + (diffMinutos(b[2]?.hora, b[3]?.hora) || 0);
-                let saldoD = trab > 0 ? trab - JORNADA_DIARIA : 0; saldoT += saldoD;
-                linhas += `<tr><td>${dia}</td><td>${b[0]?.hora||'-'}</td><td>${b[1]?.hora||'-'}</td><td>${b[2]?.hora||'-'}</td><td>${b[3]?.hora||'-'}</td><td>${formatarH(trab)}</td><td>${formatarH(saldoD)}</td><td class="no-print"><button class="btn-edit" onclick="editarDia('${nome}','${dia}')">✏️</button></td></tr>`;
-            });
-            html += `<div class="page-break"><h3 style="color:${configAtual.cor}">${configAtual.nome}</h3><p><b>Colaborador:</b> ${nome}</p><table><tr><th>DATA</th><th>E1</th><th>S1</th><th>E2</th><th>S2</th><th>TOTAL</th><th>SALDO</th><th class="no-print">EDITAR</th></tr>${linhas}</table><div class="resumo-box"><span>JORNADA PADRÃO: 08:45</span><span>SALDO MÊS: ${formatarH(saldoT)}</span></div></div>`;
+    async function carregarIA() {
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
+            const desc = [];
+            s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
+            faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.6) : null;
         });
-        document.getElementById('relatorios-container').innerHTML = html || "Nenhum ponto encontrado.";
-        document.getElementById('btn-print').style.display = 'inline-block';
     }
 
-    function diffMinutos(h1, h2) { if(!h1 || !h2 || h1==='-' || h2==='-') return 0; const [aH, aM] = h1.split(':').map(Number); const [bH, bM] = h2.split(':').map(Number); return (bH * 60 + bM) - (aH * 60 + aM); }
-    function formatarH(min) { const h = Math.floor(Math.abs(min) / 60); const m = Math.abs(min) % 60; return `${min < 0 ? '-' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; }
+    setInterval(() => {
+        const agora = new Date();
+        document.getElementById('txt-time').innerText = agora.toLocaleTimeString('pt-BR');
+        document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }, 1000);
+
+    window.entrarNoAdm = () => { if(prompt("Senha:") === configAtual.senha) alert("Acesso ao painel liberado (implementar tela)"); };
 </script>
 </body>
 </html>
