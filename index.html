@@ -2,288 +2,121 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radar Ponto - Oficial</title>
-    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radar Comercial - Ponto Facial</title>
     <style>
-        :root { --primary: #003366; --radar-red: #dc2626; --accent: #2563eb; --success: #16a34a; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
-        
-        .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
-        .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
-        
-        .logo-box { margin-bottom: 20px; }
-        .logo-text { font-size: 32px; font-weight: 900; color: var(--radar-red); letter-spacing: 3px; border: 4px solid var(--radar-red); display: inline-block; padding: 5px 20px; border-radius: 4px; }
-        .logo-sub { font-size: 12px; text-transform: uppercase; color: #64748b; margin-top: 8px; letter-spacing: 1px; font-weight: bold; }
-
-        .clock-display { background: #1e293b; color: white; padding: 30px 10px; border-radius: 20px; margin: 20px 0; box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); }
-        .time { font-size: 3.5rem; font-weight: 800; font-family: monospace; line-height: 1; }
-        .date { font-size: 0.9rem; opacity: 0.7; margin-top: 10px; text-transform: uppercase; }
-        
-        #video-container { position: relative; width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; border: 4px solid #e2e8f0; }
-        video { width: 100%; display: block; transform: scaleX(-1); }
-        
-        button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1rem; }
-        .btn-main { background: var(--primary); color: white; margin-top: 10px; }
-        .btn-adm { background: transparent; color: #64748b; margin-top: 15px; font-size: 0.8rem; text-decoration: underline; }
-        .btn-edit { background: #f1f5f9; color: #475569; padding: 5px 10px; font-size: 10px; width: auto; border: 1px solid #cbd5e1; }
-        .btn-del { background: #fee2e2; color: #991b1b; padding: 5px 10px; font-size: 10px; width: auto; border: 1px solid #f87171; margin-left: 5px; }
-        .btn-new { background: var(--success); color: white; width: auto; padding: 10px 20px; font-size: 12px; }
-        .btn-backup { background: #64748b; color: white; width: auto; padding: 8px 15px; font-size: 11px; margin: 5px; }
-
-        .admin-screen { width: 100%; max-width: 950px; background: white; padding: 30px; border-radius: 20px; }
-        .cabecalho-empresa { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-        .cabecalho-empresa h2 { margin: 0; font-size: 22px; text-transform: uppercase; }
-        .cabecalho-empresa p { margin: 5px 0; font-size: 14px; }
-
-        .section-title { background: #334155; color: white; padding: 10px; margin-top: 25px; border-radius: 8px; font-size: 14px; text-align: left; display: flex; justify-content: space-between; align-items: center; }
-        .resumo-horas { display: flex; justify-content: space-around; background: #f1f5f9; padding: 15px; border-radius: 12px; margin: 15px 0; font-weight: bold; font-size: 14px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
-        th, td { border: 1px solid #000; padding: 8px; text-align: center; }
-        th { background: #eee; }
-
-        .hidden { display: none !important; }
-        @media print { .no-print { display: none !important; } body { background: white; } .admin-screen { width: 100%; padding: 0; } }
+        body { font-family: sans-serif; text-align: center; background: #f4f4f4; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; shadow: 0 0 10px rgba(0,0,0,0.1); }
+        video { width: 100%; border-radius: 10px; background: #000; }
+        button { padding: 15px 25px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; margin: 10px; }
+        .btn-ponto { background: #28a745; color: white; }
+        .btn-admin { background: #6c757d; color: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
 
-<div class="container no-print" id="main-app">
-    <div class="card">
-        <div class="logo-box">
-            <div class="logo-text">RADAR</div>
-            <div class="logo-sub">Sistema de Ponto Eletrônico</div>
-        </div>
-        <div class="clock-display">
-            <div id="txt-time" class="time">00:00:00</div>
-            <div id="txt-date" class="date">---</div>
-        </div>
-        <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
-        <button id="btn-ponto" class="btn-main" onclick="iniciarLeitura(false)">REGISTRAR MEU PONTO</button>
-        <button class="btn-adm" onclick="entrarNoAdm()">Acesso Restrito</button>
-    </div>
+<div class="container" id="tela-ponto">
+    <h1>RADAR COMERCIAL</h1>
+    <p>Ponto Facial Digital</p>
+    <video id="video" autoplay muted></video>
+    <br>
+    <button class="btn-ponto" onclick="baterPonto()">Bater Ponto</button>
+    <br>
+    <button class="btn-admin" onclick="acessarRelatorio()">Acesso Restrito</button>
 </div>
 
-<div class="container hidden" id="admin-app">
-    <div class="admin-screen">
-        <div class="no-print" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: center;">
-            <button class="btn-main" style="width: auto; padding: 10px 25px;" onclick="window.print()">🖨️ Imprimir Relatórios</button>
-            <button class="btn-main" style="width: auto; padding: 10px 25px; background: #64748b;" onclick="location.reload()">Sair do Painel</button>
-        </div>
-
-        <div class="no-print">
-            <div class="section-title"><span>👥 GESTÃO DE COLABORADORES</span> <button class="btn-new" onclick="irParaCadastroAdm()">+ Cadastrar Novo</button></div>
-            <div id="lista-usuarios" style="display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
-            
-            <div class="section-title"><span>💾 BACKUP DO SISTEMA</span></div>
-            <div style="padding: 15px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 0 0 8px 8px;">
-                <button class="btn-backup" onclick="exportarBackup()">⬇️ Exportar Backup (.json)</button>
-                <button class="btn-backup" onclick="document.getElementById('input-file').click()">⬆️ Importar Backup (.json)</button>
-                <input type="file" id="input-file" class="hidden" accept=".json" onchange="importarBackup(event)">
-            </div>
-        </div>
-
-        <div class="section-title" style="margin-top:40px">📄 ESPELHOS DE PONTO MENSAIS</div>
-        <div id="lista-relatorios"></div>
-    </div>
+<div class="container" id="painel-relatorio" style="display:none;">
+    <h2>Relatório de Batidas</h2>
+    <table id="tabela-pontos">
+        <thead>
+            <tr>
+                <th>Funcionário</th>
+                <th>Data e Hora</th>
+            </tr>
+        </thead>
+        <tbody id="corpo-tabela"></tbody>
+    </table>
+    <br>
+    <button onclick="voltarParaPonto()">Sair do Painel</button>
 </div>
 
-<script>
-    const JORNADA_DIARIA_MIN = 525; // 08:45h
-    const NOME_EMPRESA = "Radar Comercial LTDA"; 
-    const CNPJ_EMPRESA = "08.286.530/0001-50";   
-    const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-    let faceMatcher = null;
+<script type="module">
+    // Importações do Firebase SDK v10
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    function moverRelogio() {
-        const agora = new Date();
-        document.getElementById('txt-time').innerText = agora.toLocaleTimeString('pt-BR');
-        document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    }
+    // Sua configuração fornecida
+    const firebaseConfig = {
+        apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
+        authDomain: "radar-ponto.firebaseapp.com",
+        projectId: "radar-ponto",
+        storageBucket: "radar-ponto.firebasestorage.app",
+        messagingSenderId: "957045066994",
+        appId: "1:957045066994:web:740afa605071c69e3ed46b"
+    };
 
-    async function carregarIA() {
-        try {
-            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-            await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-            treinarRostos();
-            setInterval(moverRelogio, 1000);
-            moverRelogio();
-        } catch (e) { console.log("Erro IA"); }
-    }
+    // Inicialização
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    function treinarRostos() {
-        const dados = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
-        const descriptors = Object.keys(dados).map(nome => new faceapi.LabeledFaceDescriptors(nome, [new Float32Array(dados[nome])]));
-        faceMatcher = descriptors.length > 0 ? new faceapi.FaceMatcher(descriptors, 0.6) : null;
-    }
+    // Iniciar Câmera
+    const video = document.getElementById('video');
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => video.srcObject = stream)
+        .catch(err => console.error("Erro na câmera: ", err));
 
-    function irParaCadastroAdm() {
-        document.getElementById('admin-app').classList.add('hidden');
-        document.getElementById('main-app').classList.remove('hidden');
-        alert("MODO CADASTRO: Aponte para o novo colaborador e clique no botão principal.");
-        document.getElementById('btn-ponto').innerText = "CAPTURAR BIOMETRIA";
-        document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true);
-    }
-
-    async function iniciarLeitura(eCadastro) {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-            const video = document.getElementById('video');
-            video.srcObject = stream;
-            const interval = setInterval(async () => {
-                const detect = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-                if (detect) {
-                    clearInterval(interval);
-                    stream.getTracks().forEach(t => t.stop());
-                    if (eCadastro) {
-                        const nome = prompt("Nome completo para cadastro:");
-                        if (nome) {
-                            const banco = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
-                            banco[nome] = Array.from(detect.descriptor);
-                            localStorage.setItem('radar_biometria', JSON.stringify(banco));
-                            location.reload();
-                        }
-                    } else {
-                        if (!faceMatcher) { alert("Nenhum usuário cadastrado."); location.reload(); }
-                        else {
-                            const res = faceMatcher.findBestMatch(detect.descriptor);
-                            if (res.label !== 'unknown') registrarPonto(res.label);
-                            else { alert("Rosto não reconhecido."); location.reload(); }
-                        }
-                    }
-                }
-            }, 600);
-        } catch (err) { alert("Erro câmera."); }
-    }
-
-    function registrarPonto(nome) {
-        let pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
-        const hoje = new Date().toLocaleDateString('pt-BR');
+    // FUNÇÃO: Bater Ponto
+    window.baterPonto = async function() {
+        // Exemplo: No futuro, aqui entra o nome vindo do reconhecimento facial
+        const nomeFuncionario = prompt("Para teste, digite o nome do funcionário:"); 
         
-        // LIMITAÇÃO REATIVADA: Verifica se já existem 4 batidas para este usuário hoje
-        const batidasHoje = pontos.filter(p => p.nome === nome && p.data === hoje).length;
-        if (batidasHoje >= 4) {
-            alert("Limite de 4 batidas diárias atingido para " + nome + ".");
-            location.reload();
-            return;
-        }
+        if (!nomeFuncionario) return;
 
-        pontos.push({ id: Date.now(), nome: nome, data: hoje, hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5) });
-        localStorage.setItem('radar_pontos', JSON.stringify(pontos));
-        alert("Ponto registrado: " + nome + " (Batida " + (batidasHoje + 1) + "/4)");
-        location.reload();
-    }
-
-    function exportarBackup() {
-        const dados = {
-            biometria: JSON.parse(localStorage.getItem('radar_biometria') || '{}'),
-            pontos: JSON.parse(localStorage.getItem('radar_pontos') || '[]')
-        };
-        const blob = new Blob([JSON.stringify(dados)], {type: 'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `backup_radar_${new Date().toLocaleDateString().replace(/\//g,'-')}.json`;
-        a.click();
-    }
-
-    function importarBackup(event) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const dados = JSON.parse(e.target.result);
-                if(confirm("Substituir dados atuais pelo backup?")) {
-                    localStorage.setItem('radar_biometria', JSON.stringify(dados.biometria));
-                    localStorage.setItem('radar_pontos', JSON.stringify(dados.pontos));
-                    location.reload();
-                }
-            } catch(err) { alert("Arquivo inválido."); }
-        };
-        reader.readAsText(event.target.files[0]);
-    }
-
-    function entrarNoAdm() {
-        if (prompt("Senha Master:") === 'radar2025') {
-            document.getElementById('main-app').classList.add('hidden');
-            document.getElementById('admin-app').classList.remove('hidden');
-            renderizarUsuarios(); gerarRelatorios();
-        }
-    }
-
-    function renderizarUsuarios() {
-        const biometria = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
-        let html = '';
-        Object.keys(biometria).forEach(nome => {
-            html += `<div style="background:white; padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1; font-size:11px; display:flex; align-items:center;">
-                <b>${nome}</b><button class="btn-del" onclick="excluirUsuario('${nome}')">Remover</button>
-            </div>`;
-        });
-        document.getElementById('lista-usuarios').innerHTML = html || 'Nenhum cadastro.';
-    }
-
-    function excluirUsuario(nome) {
-        if (confirm(`Excluir biometria de ${nome}?`)) {
-            const banco = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
-            delete banco[nome]; localStorage.setItem('radar_biometria', JSON.stringify(banco));
-            renderizarUsuarios();
-        }
-    }
-
-    function editarBatida(nome, dia) {
-        let pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
-        let bDia = pontos.filter(p => p.nome === nome && p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
-        const labels = ["ENTRADA", "ALMOÇO", "RETORNO", "SAÍDA"];
-        for(let i=0; i<4; i++) {
-            let nH = prompt(`${labels[i]} (${dia}):`, bDia[i]?.hora || "--:--");
-            if (nH && nH.includes(':')) {
-                if (bDia[i]) bDia[i].hora = nH;
-                else pontos.push({ id: Date.now()+i, nome: nome, data: dia, hora: nH });
-            }
-        }
-        localStorage.setItem('radar_pontos', JSON.stringify(pontos)); gerarRelatorios();
-    }
-
-    function formatarMinutos(totalMin) {
-        const sinal = totalMin < 0 ? "-" : "";
-        const mAbs = Math.abs(totalMin);
-        return sinal + String(Math.floor(mAbs/60)).padStart(2,'0') + ":" + String(mAbs%60).padStart(2,'0');
-    }
-
-    function gerarRelatorios() {
-        const pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
-        const biometria = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
-        let html = '';
-        const todosNomes = [...new Set([...Object.keys(biometria), ...pontos.map(p => p.nome)])];
-
-        todosNomes.forEach(nome => {
-            let tT = 0; let tE = 0; let linhas = '';
-            const meusP = pontos.filter(p => p.nome === nome);
-            const dias = [...new Set(meusP.map(p => p.data))].sort((a,b) => {
-                const [dA, mA, yA] = a.split('/').map(Number); const [dB, mB, yB] = b.split('/').map(Number);
-                return new Date(yA, mA-1, dA) - new Date(yB, mB-1, dB);
+        try {
+            await addDoc(collection(db, "registros_ponto"), {
+                nome: nomeFuncionario,
+                timestamp: new Date(),
+                dataHora: new Date().toLocaleString("pt-BR")
             });
-            if (dias.length === 0) return;
-            dias.forEach(dia => {
-                const b = meusP.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
-                const h = [b[0]?.hora || '-', b[1]?.hora || '-', b[2]?.hora || '-', b[3]?.hora || '-'];
-                const h2m = (hora) => { if(hora==='-') return 0; const [hh,mm]=hora.split(':').map(Number); return hh*60+mm; };
-                const mD = (h2m(h[1]) - h2m(h[0])) + (h2m(h[3]) - h2m(h[2]));
-                const e = (b.length >= 4) ? (mD - JORNADA_DIARIA_MIN) : 0;
-                tT += mD; tE += e;
-                linhas += `<tr><td>${dia}</td><td>${h[0]}</td><td>${h[1]}</td><td>${h[2]}</td><td>${h[3]}</td><td>${formatarMinutos(mD)}</td><td style="color:${e<0?'red':'green'}">${formatarMinutos(e)}</td><td class="no-print"><button class="btn-edit" onclick="editarBatida('${nome}','${dia}')">✏️</button></td></tr>`;
-            });
-            html += `<div style="page-break-after: always; margin-bottom: 40px; border-bottom: 1px solid #000; padding-bottom: 20px;">
-                <div class="cabecalho-empresa"><h2>${NOME_EMPRESA}</h2><p>CNPJ: ${CNPJ_EMPRESA}</p><p><b>RELATÓRIO DE FREQUÊNCIA</b></p></div>
-                <p>Colaborador(a): <b>${nome}</b></p>
-                <div class="resumo-horas"><span>TOTAL TRABALHADO: ${formatarMinutos(tT)}h</span><span style="color:${tE<0?'red':'#166534'}">SALDO EXTRAS: ${formatarMinutos(tE)}h</span></div>
-                <table><thead><tr><th>DATA</th><th>ENTRADA</th><th>ALMOÇO</th><th>RETORNO</th><th>SAÍDA</th><th>TOTAL</th><th>EXTRA</th><th class="no-print">EDIT</th></tr></thead><tbody>${linhas}</tbody></table>
-                <div style="display: flex; justify-content: space-between; margin-top: 50px;"><div style="border-top: 1px solid #000; width: 40%; text-align: center; font-size: 10px; padding-top: 5px;">Assinatura do Colaborador</div><div style="border-top: 1px solid #000; width: 40%; text-align: center; font-size: 10px; padding-top: 5px;">Radar Comercial LTDA</div></div>
-            </div>`;
-        });
-        document.getElementById('lista-relatorios').innerHTML = html || 'Sem dados.';
+            alert("Ponto de " + nomeFuncionario + " gravado na nuvem!");
+        } catch (e) {
+            alert("Erro ao salvar: " + e.message);
+        }
     }
-    carregarIA();
+
+    // FUNÇÃO: Carregar Relatório (Firebase Realtime)
+    function carregarDadosFirestore() {
+        const q = query(collection(db, "registros_ponto"), orderBy("timestamp", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const tabela = document.getElementById("corpo-tabela");
+            tabela.innerHTML = "";
+            snapshot.forEach((doc) => {
+                const item = doc.data();
+                tabela.innerHTML += `<tr><td>${item.nome}</td><td>${item.dataHora}</td></tr>`;
+            });
+        });
+    }
+
+    // Navegação e Senha
+    window.acessarRelatorio = function() {
+        const senha = prompt("Senha Administrativa:");
+        if (senha === "radar2025") {
+            document.getElementById("tela-ponto").style.display = "none";
+            document.getElementById("painel-relatorio").style.display = "block";
+            carregarDadosFirestore();
+        } else {
+            alert("Acesso negado.");
+        }
+    }
+
+    window.voltarParaPonto = function() {
+        document.getElementById("tela-ponto").style.display = "block";
+        document.getElementById("painel-relatorio").style.display = "none";
+    }
 </script>
+
 </body>
 </html>
