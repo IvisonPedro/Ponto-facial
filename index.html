@@ -13,21 +13,24 @@
         .logo-text { font-size: 28px; font-weight: 900; color: var(--primary); border: 3px solid var(--primary); display: inline-block; padding: 5px 12px; border-radius: 4px; text-transform: uppercase; margin-bottom: 10px; }
         .clock-display { background: #1e293b; color: white; padding: 15px; border-radius: 15px; margin: 15px 0; }
         .time { font-size: 3rem; font-weight: 800; font-family: monospace; }
-        #video-container { width: 100%; border-radius: 15px; overflow: hidden; margin: 15px 0; background: #000; border: 3px solid #e2e8f0; }
+        #video-container { width: 100%; border-radius: 15px; overflow: hidden; margin: 15px 0; background: #000; border: 3px solid #e2e8f0; position: relative; }
         video { width: 100%; display: block; transform: scaleX(-1); }
         input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
         button { padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .hidden { display: none !important; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
-        th, td { border: 1px solid #000; padding: 6px; text-align: center; }
-        .batida-tag { display: inline-block; background: #e2e8f0; padding: 2px 5px; border-radius: 4px; margin: 2px; font-weight: bold; cursor: pointer; }
+        
+        /* Estilos de Tabela para o PDF */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+        .batida-tag { display: inline-block; background: #e2e8f0; padding: 2px 5px; border-radius: 4px; margin: 2px; font-weight: bold; }
+        
         @media print {
-            body * { visibility: hidden; }
-            #relatorios-box, #relatorios-box * { visibility: visible; }
-            #relatorios-box { position: absolute; left: 0; top: 0; width: 100%; }
-            .no-print, button, input { display: none !important; }
+            .no-print { display: none !important; }
+            body { background: white; }
+            .container { display: block; padding: 0; }
+            .card { box-shadow: none; max-width: 100%; }
         }
     </style>
 </head>
@@ -35,31 +38,52 @@
 
 <div class="container hidden" id="screen-setup">
     <div class="card">
-        <h2 style="color: var(--primary);">Radar Ponto</h2>
-        <p>Vincule este dispositivo a uma empresa</p>
-        <input type="text" id="input-empresa" placeholder="ID da Empresa ou 'admin-mestre'">
-        <button class="btn-primary" onclick="vincularDispositivo()">CONFIGURAR</button>
+        <div class="logo-text">RADAR PONTO</div>
+        <p>Insira o código da empresa para configurar este dispositivo.</p>
+        <input type="text" id="input-empresa" placeholder="ID da Empresa (ex: radar)">
+        <button class="btn-primary" onclick="vincularDispositivo()">CONFIGURAR AGORA</button>
     </div>
 </div>
 
 <div class="container hidden" id="screen-ponto">
     <div class="card">
         <div id="display-logo" class="logo-text">---</div>
-        <div id="display-cnpj" style="font-size: 11px; color: #64748b; margin-bottom: 10px;">CNPJ: ---</div>
+        <div id="display-cnpj" style="font-size: 12px; color: #64748b; margin-bottom: 10px;">CNPJ: ---</div>
+        
         <div class="clock-display">
             <div id="txt-time" class="time">00:00:00</div>
             <div id="txt-date" style="font-size: 14px;">---</div>
         </div>
-        <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
+
+        <div id="video-container">
+            <video id="video" autoplay muted playsinline></video>
+        </div>
+
         <button id="btn-ponto" class="btn-primary" style="padding: 20px; font-size: 1.2rem;" onclick="iniciarLeitura(false)">REGISTRAR PONTO</button>
-        <button class="no-print" style="background:transparent; color:#64748b; text-decoration:underline;" onclick="verificarSenhaAdm()">Painel Administrativo</button>
+        <button class="no-print" style="background:transparent; color:#64748b; text-decoration:underline; font-size: 12px;" onclick="verificarSenhaAdm()">Acesso Administrativo</button>
+    </div>
+</div>
+
+<div class="container hidden" id="screen-adm">
+    <div class="card" style="max-width: 800px; text-align: left;">
+        <button class="no-print" onclick="location.reload()">⬅ Voltar</button>
+        <h2 id="adm-empresa-nome">Painel Administrativo</h2>
+        
+        <div class="no-print" style="margin: 20px 0; padding: 15px; background: #f1f5f9; border-radius: 10px;">
+            <h4>Gerar Relatório Mensal</h4>
+            <input type="month" id="filtro-mes">
+            <button class="btn-success" onclick="gerarRelatorio()">GERAR RELATÓRIO PDF</button>
+        </div>
+
+        <div id="relatorio-output"></div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, addDoc, getDocs, setDoc, query, orderBy, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+    // CONFIGURAÇÃO DO SEU FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
         authDomain: "radar-ponto.firebaseapp.com",
@@ -71,62 +95,141 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-
+    
     let empresaID = localStorage.getItem('empresa_id');
     let configEmpresa = null;
     let faceMatcher = null;
 
+    // --- CONTROLE DE TELAS ---
     window.verificarAcesso = () => {
-        if (!empresaID) document.getElementById('screen-setup').classList.remove('hidden');
-        else carregarConfiguracao(empresaID);
+        if (!empresaID) {
+            document.getElementById('screen-setup').classList.remove('hidden');
+        } else {
+            carregarEmpresa(empresaID);
+        }
     };
 
     window.vincularDispositivo = async () => {
         const id = document.getElementById('input-empresa').value.toLowerCase().trim();
-        if (id === 'admin-mestre') {
-            localStorage.setItem('empresa_id', id);
-            location.reload();
-            return;
-        }
         const snap = await getDoc(doc(db, "configuracoes_mestre", id));
         if (snap.exists()) {
             localStorage.setItem('empresa_id', id);
             location.reload();
-        } else alert("Código inválido!");
+        } else {
+            alert("Empresa não encontrada!");
+        }
     };
 
-    async function carregarConfiguracao(id) {
-        if(id === 'admin-mestre') { /* Lógica de Super ADM */ return; }
-        
+    // --- CARREGAMENTO DO SISTEMA ---
+    async function carregarEmpresa(id) {
         const snap = await getDoc(doc(db, "configuracoes_mestre", id));
         configEmpresa = snap.data();
+        
         document.getElementById('display-logo').innerText = configEmpresa.nome;
-        document.getElementById('display-cnpj').innerText = "CNPJ: " + (configEmpresa.cnpj || "---");
+        document.getElementById('display-cnpj').innerText = "CNPJ: " + (configEmpresa.cnpj || "Não cadastrado");
         document.documentElement.style.setProperty('--primary', configEmpresa.cor);
         
         document.getElementById('screen-setup').classList.add('hidden');
         document.getElementById('screen-ponto').classList.remove('hidden');
-        
-        // Inicializa IA
+
+        await carregarIA();
+    }
+
+    async function carregarIA() {
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
         
-        onSnapshot(collection(db, `empresas/${id}/biometria`), (s) => {
+        onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
             const desc = [];
             s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
             faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.6) : null;
         });
     }
 
-    // Funções de registro de ponto, relatórios e dashboard (conforme enviadas anteriormente)
-    // ...
+    // --- REGISTRO DE PONTO ---
+    window.iniciarLeitura = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+        const video = document.getElementById('video');
+        video.srcObject = stream;
 
+        const interval = setInterval(async () => {
+            const detect = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+            if (detect) {
+                const res = faceMatcher?.findBestMatch(detect.descriptor);
+                if (res && res.label !== 'unknown') {
+                    clearInterval(interval);
+                    stream.getTracks().forEach(t => t.stop());
+                    
+                    await addDoc(collection(db, `empresas/${empresaID}/pontos`), {
+                        nome: res.label,
+                        data: new Date().toLocaleDateString('pt-BR'),
+                        hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5),
+                        timestamp: Date.now()
+                    });
+                    
+                    alert("Ponto registrado: " + res.label);
+                    location.reload();
+                }
+            }
+        }, 1000);
+    };
+
+    // --- RELATÓRIOS E CÁLCULOS ---
+    window.verificarSenhaAdm = () => {
+        const senha = prompt("Digite a senha administrativa:");
+        if (senha === configEmpresa.senha) {
+            document.getElementById('screen-ponto').classList.add('hidden');
+            document.getElementById('screen-adm').classList.remove('hidden');
+        }
+    };
+
+    const hToM = (h) => { const [hrs, min] = h.split(':').map(Number); return hrs * 60 + min; };
+    const mToH = (m) => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+
+    window.gerarRelatorio = async () => {
+        const mesF = document.getElementById('filtro-mes').value;
+        if (!mesF) return alert("Selecione o mês!");
+        
+        const [ano, mes] = mesF.split('-');
+        const snap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
+        
+        let html = `<h2>RELATÓRIO DE PONTO - ${configEmpresa.nome}</h2><p>CNPJ: ${configEmpresa.cnpj}</p>`;
+        const pontos = [];
+        snap.forEach(d => { if(d.data().data.includes(`${mes}/${ano}`)) pontos.push(d.data()); });
+
+        const nomes = [...new Set(pontos.map(p => p.nome))];
+        nomes.forEach(n => {
+            let totalMinutosMes = 0;
+            let linhas = '';
+            const pU = pontos.filter(p => p.nome === n);
+            const dias = [...new Set(pU.map(p => p.data))].sort();
+
+            dias.forEach(d => {
+                const bD = pU.filter(p => p.data === d).sort((a,b) => a.hora.localeCompare(b.hora));
+                let mD = 0;
+                for(let i=0; i<bD.length; i+=2) {
+                    if(bD[i+1]) mD += (hToM(bD[i+1].hora) - hToM(bD[i].hora));
+                }
+                totalMinutosMes += mD;
+                const tags = bD.map(x => `<span class="batida-tag">${x.hora}</span>`).join(' ');
+                linhas += `<tr><td>${d}</td><td>${tags}</td><td>${mD > 0 ? mToH(mD) : '---'}</td></tr>`;
+            });
+
+            html += `<h3>Colaborador: ${n}</h3><table><tr><th>DATA</th><th>BATIDAS</th><th>TOTAL DIA</th></tr>${linhas}<tr><td colspan="2"><b>TOTAL NO MÊS</b></td><td><b>${mToH(totalMinutosMes)}</b></td></tr></table><br><hr>`;
+        });
+
+        document.getElementById('relatorio-output').innerHTML = html;
+        window.print();
+    };
+
+    // RELÓGIO ATUALIZÁVEL
     setInterval(() => {
         const agora = new Date();
         document.getElementById('txt-time').innerText = agora.toLocaleTimeString('pt-BR');
         document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
     }, 1000);
+
 </script>
 </body>
 </html>
