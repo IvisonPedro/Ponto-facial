@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radar Ponto - Oficial</title>
+    <title>Radar Ponto - Sistema Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
         :root { --primary: #003366; --radar-red: #dc2626; --success: #16a34a; --bg: #f8fafc; }
@@ -21,17 +21,18 @@
         .btn-danger { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
         .btn-edit { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
         .admin-screen { width: 100%; max-width: 900px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
-        th, td { border: 1px solid #000; padding: 10px; text-align: center; }
-        th { background: #f8fafc; }
-        .resumo-box { background: #f1f5f9; padding: 15px; margin-top: 0; border: 1px solid #000; border-top: none; font-weight: bold; display: flex; justify-content: space-between; font-size: 13px; }
-        .section-title { background: #334155; color: white; padding: 12px; margin: 25px 0 10px 0; border-radius: 8px; font-size: 14px; text-transform: uppercase; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+        th { background: #f8fafc; font-size: 11px; }
+        .resumo-box { background: #f1f5f9; padding: 15px; border: 1px solid #000; border-top: none; font-weight: bold; display: flex; justify-content: space-between; font-size: 12px; }
+        .section-title { background: #334155; color: white; padding: 12px; margin: 25px 0 10px 0; border-radius: 8px; font-size: 13px; text-transform: uppercase; font-weight: bold; text-align: center; }
         .hidden { display: none !important; }
         @media print { 
             .no-print { display: none !important; } 
             body { background: white; }
             .admin-screen { box-shadow: none; width: 100%; padding: 0; }
-            .page-break { page-break-after: always; border-bottom: 1px solid #eee; margin-bottom: 30px; }
+            .page-break { page-break-after: always; margin-bottom: 30px; }
+            table { font-size: 10px; }
         }
     </style>
 </head>
@@ -40,10 +41,7 @@
 <div class="container no-print" id="main-app">
     <div class="card">
         <div class="logo-text">RADAR</div>
-        <div class="clock-display">
-            <div id="txt-time" class="time">00:00:00</div>
-            <div id="txt-date" style="margin-top:5px; font-size: 14px; opacity: 0.8;">---</div>
-        </div>
+        <div class="clock-display"><div id="txt-time" class="time">00:00:00</div><div id="txt-date" style="margin-top:5px; font-size: 14px; opacity: 0.8;">---</div></div>
         <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
         <button id="btn-ponto" class="btn-main" onclick="iniciarLeitura(false)">REGISTRAR MEU PONTO</button>
         <button style="background:transparent; color:#64748b; text-decoration:underline; margin-top:20px; width:100%;" onclick="entrarNoAdm()">Painel Administrativo</button>
@@ -57,18 +55,15 @@
                 <button class="btn-edit" onclick="location.reload()">⬅ Sair</button>
                 <button class="btn-success" onclick="irParaCadastro()">+ Novo Funcionário</button>
             </div>
-
             <div class="section-title">👥 Colaboradores Cadastrados</div>
-            <div id="lista-usuarios" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;"></div>
-
+            <div id="lista-usuarios" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; justify-content: center;"></div>
             <div class="section-title">📊 Relatórios de Ponto</div>
-            <div style="background: #f8fafc; padding: 15px; border-radius: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div style="background: #f8fafc; padding: 15px; border-radius: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;">
                 <input type="month" id="filtro-mes" style="padding: 10px; border-radius: 6px; border: 1px solid #ddd;">
                 <button class="btn-success" onclick="renderizarRelatorios()">🔍 Gerar Relatório</button>
-                <button class="btn-edit" id="btn-print" onclick="imprimirRelatorio()" style="display:none;">📄 Gerar PDF</button>
+                <button class="btn-edit" id="btn-print-trigger" style="display:none;" onclick="window.print()">🖨️ Gerar PDF</button>
             </div>
         </div>
-
         <div id="relatorios-container"></div>
     </div>
 </div>
@@ -89,7 +84,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-    const JORNADA_DIARIA = 525; // 8h45min em minutos
+    const JORNADA_DIARIA = 525; // 8h45min
     let faceMatcher = null;
 
     setInterval(() => {
@@ -108,7 +103,7 @@
             lista.innerHTML = '';
             s.forEach(d => {
                 desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)]));
-                lista.innerHTML += `<div style="background:white; border:1px solid #ddd; padding:10px; border-radius:8px; text-align:center;">
+                lista.innerHTML += `<div style="background:white; border:1px solid #ddd; padding:10px; border-radius:8px; text-align:center; min-width:120px;">
                     <b style="font-size:12px;">${d.id}</b><br>
                     <button class="btn-danger" style="padding:4px 8px; margin-top:5px; font-size:10px;" onclick="excluirFuncionario('${d.id}')">Excluir</button>
                 </div>`;
@@ -130,8 +125,6 @@
         return `${min < 0 ? '-' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     }
 
-    window.imprimirRelatorio = () => { window.print(); }
-
     window.excluirFuncionario = async (n) => { if(confirm(`Excluir ${n}?`)) await deleteDoc(doc(db,"biometria",n)); }
 
     window.renderizarRelatorios = async () => {
@@ -150,7 +143,11 @@
 
         nomes.forEach(nome => {
             const pUser = pontos.filter(p => p.nome === nome);
-            const dias = [...new Set(pUser.map(p => p.data))].sort((a,b) => a.localeCompare(b));
+            const dias = [...new Set(pUser.map(p => p.data))].sort((a,b) => {
+                const [da, ma, aa] = a.split('/').map(Number);
+                const [db, mb, ab] = b.split('/').map(Number);
+                return new Date(aa, ma-1, da) - new Date(ab, mb-1, db);
+            });
             let saldoTotal = 0;
             let linhas = '';
 
@@ -168,17 +165,24 @@
             });
 
             html += `<div class="page-break">
-                <h3 style="margin-bottom:5px;">Radar Comercial LTDA</h3>
-                <p style="margin:0 0 10px 0;"><b>Funcionário:</b> ${nome} | <b>Mês:</b> ${mes}/${ano}</p>
-                <table><thead><tr><th>DATA</th><th>E1</th><th>S1</th><th>E2</th><th>S2</th><th>TOTAL</th><th>SALDO</th></tr></thead><tbody>${linhas}</tbody></table>
+                <div style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 10px;">
+                    <h2 style="margin:0">RADAR COMERCIAL LTDA</h2>
+                    <p style="margin:5px 0">ESPELHO DE PONTO MENSAL - ${mes}/${ano}</p>
+                </div>
+                <p><b>Funcionário:</b> ${nome.toUpperCase()}</p>
+                <table><thead><tr><th>DATA</th><th>ENTRADA</th><th>ALMOÇO</th><th>RETORNO</th><th>SAÍDA</th><th>TOTAL</th><th>SALDO</th></tr></thead><tbody>${linhas}</tbody></table>
                 <div class="resumo-box">
                     <span>JORNADA PADRÃO: 08:45</span>
                     <span>SALDO ACUMULADO: <span style="color:${saldoTotal<0?'red':'green'}">${formatarH(saldoTotal)}</span></span>
                 </div>
+                <div style="margin-top: 40px; display: flex; justify-content: space-between;" class="no-print-pdf">
+                    <div style="border-top: 1px solid #000; width: 45%; text-align: center; font-size: 10px; padding-top: 5px;">Assinatura do Colaborador</div>
+                    <div style="border-top: 1px solid #000; width: 45%; text-align: center; font-size: 10px; padding-top: 5px;">Radar Comercial LTDA</div>
+                </div>
             </div>`;
         });
-        document.getElementById('relatorios-container').innerHTML = html || 'Sem dados.';
-        document.getElementById('btn-print').style.display = 'inline-block';
+        document.getElementById('relatorios-container').innerHTML = html || '<p style="text-align:center;">Nenhum dado encontrado.</p>';
+        document.getElementById('btn-print-trigger').style.display = (nomes.length > 0) ? 'inline-block' : 'none';
     }
 
     window.iniciarLeitura = async (cadastro) => {
@@ -202,7 +206,7 @@
                         const s = await getDocs(q);
                         if (s.size >= 4) return alert("Limite de 4 batidas atingido.");
                         await addDoc(collection(db, "pontos"), { nome: res.label, data: hoje, hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5), timestamp: Date.now() });
-                        alert("Ponto batido com sucesso!");
+                        alert("Ponto registrado!");
                     } else alert("Não reconhecido.");
                     location.reload();
                 }
@@ -211,7 +215,7 @@
     }
 
     window.entrarNoAdm = () => { if(prompt("Senha:")==='radar2025'){ document.getElementById('main-app').classList.add('hidden'); document.getElementById('admin-app').classList.remove('hidden'); }};
-    window.irParaCadastro = () => { document.getElementById('admin-app').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); document.getElementById('btn-ponto').innerText = "CAPTURAR NOVO ROSTO"; document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true); };
+    window.irParaCadastro = () => { document.getElementById('admin-app').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); document.getElementById('btn-ponto').innerText = "CAPTURAR ROSTO"; document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true); };
 
     carregarIA();
 </script>
