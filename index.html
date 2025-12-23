@@ -160,10 +160,18 @@
     function registrarPonto(nome) {
         let pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
         const hoje = new Date().toLocaleDateString('pt-BR');
-        // REMOVIDO O LIMITE DE 4 BATIDAS
+        
+        // LIMITAÇÃO REATIVADA: Verifica se já existem 4 batidas para este usuário hoje
+        const batidasHoje = pontos.filter(p => p.nome === nome && p.data === hoje).length;
+        if (batidasHoje >= 4) {
+            alert("Limite de 4 batidas diárias atingido para " + nome + ".");
+            location.reload();
+            return;
+        }
+
         pontos.push({ id: Date.now(), nome: nome, data: hoje, hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5) });
         localStorage.setItem('radar_pontos', JSON.stringify(pontos));
-        alert("Ponto registrado: " + nome);
+        alert("Ponto registrado: " + nome + " (Batida " + (batidasHoje + 1) + "/4)");
         location.reload();
     }
 
