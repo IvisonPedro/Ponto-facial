@@ -13,18 +13,9 @@
         .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
         
-        /* Logo Radar Personalizado */
+        /* Logo na Tela Principal */
         .logo-box { margin-bottom: 20px; }
-        .logo-text { 
-            font-size: 32px; 
-            font-weight: 900; 
-            color: var(--radar-red); 
-            letter-spacing: 3px; 
-            border: 4px solid var(--radar-red); 
-            display: inline-block; 
-            padding: 5px 20px;
-            border-radius: 4px;
-        }
+        .logo-text { font-size: 32px; font-weight: 900; color: var(--radar-red); letter-spacing: 3px; border: 4px solid var(--radar-red); display: inline-block; padding: 5px 20px; border-radius: 4px; }
         .logo-sub { font-size: 12px; text-transform: uppercase; color: #64748b; margin-top: 8px; letter-spacing: 1px; font-weight: bold; }
 
         /* Relógio */
@@ -36,30 +27,31 @@
         .on { background: #dcfce7; color: #166534; }
         .off { background: #fee2e2; color: #991b1b; }
 
-        /* Câmera */
         #video-container { position: relative; width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; border: 4px solid #e2e8f0; }
         video { width: 100%; display: block; transform: scaleX(-1); }
         
-        /* Botões */
         button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1rem; }
         .btn-main { background: var(--primary); color: white; margin-top: 10px; }
-        .btn-main:active { transform: scale(0.98); }
         .btn-adm { background: transparent; color: #64748b; margin-top: 15px; font-size: 0.8rem; text-decoration: underline; }
         .btn-edit { background: #f1f5f9; color: #475569; padding: 5px 10px; font-size: 10px; width: auto; border: 1px solid #cbd5e1; }
 
-        /* Painel ADM */
+        /* Estilo Relatório PDF */
         .admin-screen { width: 100%; max-width: 950px; background: white; padding: 30px; border-radius: 20px; }
-        .resumo-horas { display: flex; justify-content: space-around; background: #f1f5f9; padding: 15px; border-radius: 12px; margin: 20px 0; font-weight: bold; font-size: 14px; border: 1px solid #e2e8f0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-        th, td { border: 1px solid #000; padding: 10px; text-align: center; }
-        th { background: #f8fafc; text-transform: uppercase; }
+        .cabecalho-empresa { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        .cabecalho-empresa h2 { margin: 0; font-size: 22px; text-transform: uppercase; }
+        .cabecalho-empresa p { margin: 5px 0; font-size: 14px; }
+
+        .resumo-horas { display: flex; justify-content: space-around; background: #f1f5f9; padding: 15px; border-radius: 12px; margin: 15px 0; font-weight: bold; font-size: 14px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+        th { background: #eee; }
 
         .hidden { display: none !important; }
         @media print { 
             .no-print { display: none !important; } 
             body { background: white; }
             .admin-screen { width: 100%; padding: 0; box-shadow: none; }
-            .logo-text { color: #dc2626 !important; border-color: #dc2626 !important; -webkit-print-color-adjust: exact; }
+            .resumo-horas { background: white !important; border: 1px solid #000; }
         }
     </style>
 </head>
@@ -69,19 +61,14 @@
     <div class="card">
         <div class="logo-box">
             <div class="logo-text">RADAR</div>
-            <div class="logo-sub">Controle de Ponto Biométrico</div>
+            <div class="logo-sub">Sistema de Ponto Eletrônico</div>
         </div>
-
         <div class="clock-display">
             <div id="txt-time" class="time">00:00:00</div>
             <div id="txt-date" class="date">---</div>
-            <div id="txt-status" class="status-badge">INICIALIZANDO...</div>
+            <div id="txt-status" class="status-badge">...</div>
         </div>
-
-        <div id="video-container">
-            <video id="video" autoplay muted playsinline></video>
-        </div>
-
+        <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
         <button id="btn-ponto" class="btn-main" onclick="iniciarLeitura()">REGISTRAR MEU PONTO</button>
         <button class="btn-adm" onclick="entrarNoAdm()">Acesso Restrito</button>
     </div>
@@ -89,37 +76,31 @@
 
 <div class="container hidden" id="admin-app">
     <div class="admin-screen">
-        <div class="no-print" style="margin-bottom: 30px; display: flex; gap: 10px; justify-content: center;">
-            <button class="btn-main" style="width: auto; padding: 10px 25px;" onclick="window.print()">🖨️ Imprimir PDF</button>
-            <button class="btn-main" style="width: auto; padding: 10px 25px; background: #64748b;" onclick="location.reload()">Sair do Painel</button>
+        <div class="no-print" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: center;">
+            <button class="btn-main" style="width: auto; padding: 10px 25px;" onclick="window.print()">🖨️ Imprimir Relatório</button>
+            <button class="btn-main" style="width: auto; padding: 10px 25px; background: #64748b;" onclick="location.reload()">Sair</button>
         </div>
         <div id="lista-relatorios"></div>
     </div>
 </div>
 
 <script>
-    const JORNADA_DIARIA_MIN = 525; // 08:45h (8*60 + 45)
+    const JORNADA_DIARIA_MIN = 525; // 08:45h
+    const NOME_EMPRESA = "Radar Comercial LTDA"; 
+    const CNPJ_EMPRESA = "08.286.530/0001-50";   
     const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
     let faceMatcher = null;
 
-    // Relógio
     function moverRelogio() {
         const agora = new Date();
         document.getElementById('txt-time').innerText = agora.toLocaleTimeString('pt-BR');
         document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-        
         const h = agora.getHours();
         const status = document.getElementById('txt-status');
-        if (h >= 8 && h < 18) {
-            status.innerText = "● EXPEDIENTE ATIVO";
-            status.className = "status-badge on";
-        } else {
-            status.innerText = "○ FORA DE HORÁRIO";
-            status.className = "status-badge off";
-        }
+        status.innerText = (h >= 8 && h < 18) ? "● EXPEDIENTE ATIVO" : "○ FORA DE HORÁRIO";
+        status.className = "status-badge " + (h >= 8 && h < 18 ? "on" : "off");
     }
 
-    // IA e Biometria
     async function carregarIA() {
         try {
             await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
@@ -128,7 +109,7 @@
             treinarRostos();
             setInterval(moverRelogio, 1000);
             moverRelogio();
-        } catch (e) { console.error("Erro ao carregar IA:", e); }
+        } catch (e) { console.log("Erro IA"); }
     }
 
     function treinarRostos() {
@@ -138,26 +119,19 @@
     }
 
     async function iniciarLeitura() {
-        const btn = document.getElementById('btn-ponto');
-        btn.innerText = "IDENTIFICANDO...";
-        btn.disabled = true;
-
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
             const video = document.getElementById('video');
             video.srcObject = stream;
-
             const interval = setInterval(async () => {
                 const detect = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-                
                 if (detect) {
                     if (!faceMatcher) {
-                        const nome = prompt("Primeiro acesso. Digite seu Nome Completo:");
+                        const nome = prompt("Nome para Cadastro:");
                         if (nome) {
                             const banco = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
                             banco[nome] = Array.from(detect.descriptor);
                             localStorage.setItem('radar_biometria', JSON.stringify(banco));
-                            alert("Cadastro realizado com sucesso!");
                             location.reload();
                         }
                     } else {
@@ -170,56 +144,38 @@
                     }
                 }
             }, 600);
-        } catch (err) {
-            alert("Erro ao acessar câmera.");
-            btn.disabled = false;
-            btn.innerText = "REGISTRAR MEU PONTO";
-        }
+        } catch (err) { alert("Câmera não encontrada."); }
     }
 
     function registrarPonto(nome) {
         let pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
         const hoje = new Date().toLocaleDateString('pt-BR');
-        const batidasHoje = pontos.filter(p => p.nome === nome && p.data === hoje).length;
-
-        if (batidasHoje >= 4) {
-            alert("Limite de 4 batidas diárias atingido para " + nome);
-            location.reload();
-            return;
+        if (pontos.filter(p => p.nome === nome && p.data === hoje).length >= 4) {
+            alert("Limite diário atingido.");
+            location.reload(); return;
         }
-
-        pontos.push({ 
-            id: Date.now(), 
-            nome: nome, 
-            data: hoje, 
-            hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5) 
-        });
+        pontos.push({ id: Date.now(), nome: nome, data: hoje, hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5) });
         localStorage.setItem('radar_pontos', JSON.stringify(pontos));
-        alert("Ponto registrado: " + nome);
+        alert("Ponto registrado para " + nome);
         location.reload();
     }
 
-    // Cálculos
     function calcularDiferenca(h1, h2) {
         if (!h1 || h1 === '-' || !h2 || h2 === '-') return 0;
         const [hh1, mm1] = h1.split(':').map(Number);
         const [hh2, mm2] = h2.split(':').map(Number);
-        const min1 = (hh1 * 60) + mm1;
-        const min2 = (hh2 * 60) + mm2;
-        return min2 > min1 ? min2 - min1 : 0;
+        const m1 = (hh1 * 60) + mm1; const m2 = (hh2 * 60) + mm2;
+        return m2 > m1 ? m2 - m1 : 0;
     }
 
     function formatarMinutos(totalMin) {
         const sinal = totalMin < 0 ? "-" : "";
-        const minAbs = Math.abs(totalMin);
-        const h = Math.floor(minAbs / 60);
-        const m = minAbs % 60;
-        return `${sinal}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        const mAbs = Math.abs(totalMin);
+        return sinal + String(Math.floor(mAbs/60)).padStart(2,'0') + ":" + String(mAbs%60).padStart(2,'0');
     }
 
-    // Admin
     function entrarNoAdm() {
-        if (prompt("Senha Administrativa:") === 'radar2025') {
+        if (prompt("Senha:") === 'radar2025') {
             document.getElementById('main-app').classList.add('hidden');
             document.getElementById('admin-app').classList.remove('hidden');
             gerarRelatorios();
@@ -228,15 +184,13 @@
 
     function editarBatida(nome, dia) {
         let pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
-        let batidasDia = pontos.filter(p => p.nome === nome && p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
-        const labels = ["ENTRADA", "ALMOÇO", "VOLTA ALMOÇO", "SAÍDA"];
-        
+        let bDia = pontos.filter(p => p.nome === nome && p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
+        const labels = ["ENTRADA", "ALMOÇO", "VOLTA", "SAÍDA"];
         for(let i=0; i<4; i++) {
-            let horaAtual = batidasDia[i] ? batidasDia[i].hora : "--:--";
-            let novaHora = prompt(`Editar ${labels[i]} do dia ${dia}:`, horaAtual);
-            if (novaHora && novaHora.includes(':')) {
-                if (batidasDia[i]) batidasDia[i].hora = novaHora;
-                else pontos.push({ id: Date.now()+i, nome: nome, data: dia, hora: novaHora });
+            let nH = prompt(`${labels[i]} (${dia}):`, bDia[i]?.hora || "--:--");
+            if (nH && nH.includes(':')) {
+                if (bDia[i]) bDia[i].hora = nH;
+                else pontos.push({ id: Date.now()+i, nome: nome, data: dia, hora: nH });
             }
         }
         localStorage.setItem('radar_pontos', JSON.stringify(pontos));
@@ -247,59 +201,45 @@
         const pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
         const biometria = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
         let html = '';
-
         Object.keys(biometria).forEach(nome => {
-            let totalT = 0;
-            let totalE = 0;
-            let linhas = '';
-            
-            const meusPontos = pontos.filter(p => p.nome === nome);
-            const dias = [...new Set(meusPontos.map(p => p.data))].sort((a,b) => {
-                const [dA, mA, yA] = a.split('/').map(Number);
-                const [dB, mB, yB] = b.split('/').map(Number);
+            let tT = 0; let tE = 0; let linhas = '';
+            const meusP = pontos.filter(p => p.nome === nome);
+            const dias = [...new Set(meusP.map(p => p.data))].sort((a,b) => {
+                const [dA, mA, yA] = a.split('/').map(Number); const [dB, mB, yB] = b.split('/').map(Number);
                 return new Date(yA, mA-1, dA) - new Date(yB, mB-1, dB);
             });
-
             dias.forEach(dia => {
-                const b = meusPontos.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
+                const b = meusP.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
                 const h = [b[0]?.hora || '-', b[1]?.hora || '-', b[2]?.hora || '-', b[3]?.hora || '-'];
-                const minDia = calcularDiferenca(h[0], h[1]) + calcularDiferenca(h[2], h[3]);
-                const extra = (b.length >= 4) ? (minDia - JORNADA_DIARIA_MIN) : 0;
-                
-                totalT += minDia;
-                totalE += extra;
-
-                linhas += `<tr>
-                    <td>${dia}</td><td>${h[0]}</td><td>${h[1]}</td><td>${h[2]}</td><td>${h[3]}</td>
-                    <td style="background:#f8fafc"><b>${formatarMinutos(minDia)}</b></td>
-                    <td style="color:${extra < 0 ? 'red' : 'green'}"><b>${formatarMinutos(extra)}</b></td>
-                    <td class="no-print"><button class="btn-edit" onclick="editarBatida('${nome}','${dia}')">✏️</button></td>
-                </tr>`;
+                const mD = calcularDiferenca(h[0], h[1]) + calcularDiferenca(h[2], h[3]);
+                const e = (b.length >= 4) ? (mD - JORNADA_DIARIA_MIN) : 0;
+                tT += mD; tE += e;
+                linhas += `<tr><td>${dia}</td><td>${h[0]}</td><td>${h[1]}</td><td>${h[2]}</td><td>${h[3]}</td><td>${formatarMinutos(mD)}</td><td style="color:${e<0?'red':'green'}">${formatarMinutos(e)}</td><td class="no-print"><button class="btn-edit" onclick="editarBatida('${nome}','${dia}')">✏️</button></td></tr>`;
             });
-
             html += `
-                <div style="page-break-after: always; margin-bottom: 50px; border-bottom: 2px solid #000; padding-bottom: 30px;">
-                    <center>
-                        <div class="logo-text">RADAR</div>
-                        <p style="margin-top:10px">Relatório Mensal - Colaborador: <b>${nome}</b></p>
-                    </center>
+                <div style="page-break-after: always; margin-bottom: 40px; border-bottom: 1px solid #000; padding-bottom: 20px;">
+                    <div class="cabecalho-empresa">
+                        <h2>${NOME_EMPRESA}</h2>
+                        <p>CNPJ: ${CNPJ_EMPRESA}</p>
+                        <p><b>RELATÓRIO DE FREQUÊNCIA INDIVIDUAL</b></p>
+                    </div>
+                    <p>Colaborador(a): <b>${nome}</b></p>
                     <div class="resumo-horas">
-                        <span>TOTAL TRABALHADO: ${formatarMinutos(totalT)}h</span>
-                        <span style="color:${totalE < 0 ? 'red' : '#166534'}">SALDO DE EXTRAS: ${formatarMinutos(totalE)}h</span>
+                        <span>HORAS TRABALHADAS: ${formatarMinutos(tT)}h</span>
+                        <span style="color:${tE<0?'red':'#166534'}">SALDO DE EXTRAS: ${formatarMinutos(tE)}h</span>
                     </div>
                     <table>
-                        <thead><tr><th>Data</th><th>ENT</th><th>ALM</th><th>VOL</th><th>SAÍ</th><th>TOTAL</th><th>EXTRAS</th><th class="no-print">AÇÃO</th></tr></thead>
+                        <thead><tr><th>DATA</th><th>ENTRADA</th><th>ALMOÇO</th><th>RETORNO</th><th>SAÍDA</th><th>TOTAL</th><th>EXTRA</th><th class="no-print">EDIT</th></tr></thead>
                         <tbody>${linhas}</tbody>
                     </table>
-                    <div style="display: flex; justify-content: space-between; margin-top: 80px;">
+                    <div style="display: flex; justify-content: space-between; margin-top: 60px;">
                         <div style="border-top: 1px solid #000; width: 40%; text-align: center; font-size: 10px; padding-top: 5px;">Assinatura do Colaborador</div>
-                        <div style="border-top: 1px solid #000; width: 40%; text-align: center; font-size: 10px; padding-top: 5px;">Assinatura Radar Comercial</div>
+                        <div style="border-top: 1px solid #000; width: 40%; text-align: center; font-size: 10px; padding-top: 5px;">Assinatura do Empregador</div>
                     </div>
                 </div>`;
         });
-        document.getElementById('lista-relatorios').innerHTML = html || 'Sem registros no banco de dados.';
+        document.getElementById('lista-relatorios').innerHTML = html || 'Sem dados.';
     }
-
     carregarIA();
 </script>
 </body>
