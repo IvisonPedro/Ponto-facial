@@ -3,154 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radar Ponto - Biometria</title>
+    <title>Radar Ponto - Oficial</title>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
         :root { --primary: #003366; --accent: #2563eb; --success: #16a34a; --danger: #dc2626; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         
-        .card { background: white; width: 100%; max-width: 400px; min-height: 100vh; padding: 20px; box-sizing: border-box; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        /* Layout Principal */
+        .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
         
-        /* Cabeçalho e Logo */
-        .header { margin-bottom: 30px; }
-        .logo-radar { width: 150px; margin-bottom: 10px; font-weight: bold; color: var(--primary); font-size: 24px; border: 2px solid var(--primary); padding: 5px; display: inline-block; }
-        
-        /* Novo Relógio Moderno */
-        .clock-container { background: #1e293b; color: #f8fafc; padding: 25px; border-radius: 20px; margin-bottom: 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
-        .time { font-size: 3.5rem; font-weight: 800; font-family: 'Courier New', Courier, monospace; letter-spacing: -2px; }
-        .date { font-size: 1rem; opacity: 0.8; text-transform: uppercase; margin-top: 5px; }
-        
-        /* Status de Expediente */
-        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-top: 10px; }
-        .status-on { background: #dcfce7; color: #166534; }
-        .status-off { background: #fee2e2; color: #991b1b; }
+        /* Logo Radar */
+        .logo-box { margin-bottom: 20px; }
+        .logo-text { font-size: 28px; font-weight: 900; color: var(--primary); letter-spacing: 2px; border: 3px solid var(--primary); display: inline-block; padding: 5px 15px; }
+        .logo-sub { font-size: 12px; text-transform: uppercase; color: #64748b; margin-top: 5px; letter-spacing: 1px; }
 
-        /* Câmera e Botões */
-        #video-container { position: relative; width: 100%; border-radius: 15px; overflow: hidden; margin-top: 20px; display: none; background: #000; }
-        video { width: 100%; display: block; }
-        button { width: 100%; padding: 16px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 1rem; transition: 0.3s; }
-        .btn-ponto { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(0,51,102,0.3); }
-        .btn-adm { background: #f1f5f9; color: #475569; font-size: 0.8rem; }
+        /* Relógio Moderno */
+        .clock-display { background: #1e293b; color: white; padding: 30px 10px; border-radius: 20px; margin: 20px 0; box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); }
+        .time { font-size: 3.5rem; font-weight: 800; font-family: monospace; line-height: 1; }
+        .date { font-size: 0.9rem; opacity: 0.7; margin-top: 10px; text-transform: uppercase; }
         
+        .status-badge { display: inline-block; margin-top: 15px; padding: 6px 16px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; }
+        .on { background: #dcfce7; color: #166534; }
+        .off { background: #fee2e2; color: #991b1b; }
+
+        /* Câmera */
+        #video-container { position: relative; width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; border: 4px solid transparent; transition: 0.3s; }
+        .active-cam { border-color: var(--accent) !important; }
+        video { width: 100%; display: block; }
+        
+        /* Botões */
+        button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1rem; }
+        .btn-main { background: var(--primary); color: white; margin-top: 10px; }
+        .btn-adm { background: transparent; color: #64748b; margin-top: 15px; font-size: 0.8rem; text-decoration: underline; }
+        .btn-danger { background: var(--danger); color: white; }
+
+        /* Painel ADM */
+        .admin-screen { width: 100%; max-width: 800px; background: white; padding: 30px; border-radius: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; }
+        th { background: #f8fafc; color: var(--primary); }
+
         .hidden { display: none !important; }
+        @media print { .no-print { display: none !important; } .print-only { display: block !important; } }
     </style>
 </head>
 <body>
 
-<div class="card" id="app">
-    <div class="header">
-        <div class="logo-radar">RADAR</div>
-        <div style="font-size: 0.9rem; color: #64748b;">Comercial - Controle de Ponto</div>
+<div class="container no-print" id="main-app">
+    <div class="card">
+        <div class="logo-box">
+            <div class="logo-text">RADAR</div>
+            <div class="logo-sub">Comercial - Controle de Ponto</div>
+        </div>
+
+        <div class="clock-display">
+            <div id="txt-time" class="time">00:00:00</div>
+            <div id="txt-date" class="date">Carregando...</div>
+            <div id="txt-status" class="status-badge">VERIFICANDO...</div>
+        </div>
+
+        <div id="video-container" class="hidden">
+            <video id="video" autoplay muted playsinline></video>
+        </div>
+
+        <button id="btn-ponto" class="btn-main" onclick="iniciarLeitura()">REGISTRAR PONTO</button>
+        <button class="btn-adm" onclick="entrarNoAdm()">Painel Administrativo</button>
     </div>
+</div>
 
-    <div class="clock-container">
-        <div id="relogio" class="time">00:00:00</div>
-        <div id="data" class="date">-- de -- de ----</div>
-        <div id="expediente" class="status-badge status-off">FORA DE HORÁRIO</div>
+<div class="container hidden" id="admin-app">
+    <div class="admin-screen">
+        <div class="no-print">
+            <h2 style="color: var(--primary); margin-top: 0;">Painel de Gestão Radar</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 30px;">
+                <button class="btn-main" style="width: auto;" onclick="window.print()">🖨️ Imprimir Folhas</button>
+                <button class="btn-danger" style="width: auto;" onclick="location.reload()">Sair do Painel</button>
+            </div>
+            <hr>
+        </div>
+        
+        <div id="lista-relatorios"></div>
     </div>
-
-    <div id="video-container">
-        <video id="video" autoplay muted playsinline></video>
-    </div>
-
-    <p id="status-ia" style="font-size: 0.85rem; color: #64748b; margin-top: 15px;">IA: Pronta para leitura</p>
-
-    <button id="btn-auth" class="btn-ponto" onclick="iniciarValidacao()">REGISTRAR BIOMETRIA</button>
-    <button class="btn-adm" onclick="abrirGestao()">Painel Administrativo</button>
 </div>
 
 <script>
     let faceMatcher = null;
     const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
 
-    // Atualização do Relógio e Expediente
-    function atualizarRelogio() {
+    // 1. Relógio e Status de Expediente
+    function moverRelogio() {
         const agora = new Date();
-        document.getElementById('relogio').innerText = agora.toLocaleTimeString('pt-BR');
+        document.getElementById('txt-time').innerText = agora.toLocaleTimeString('pt-BR');
+        document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
         
-        const opcoes = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('data').innerText = agora.toLocaleDateString('pt-BR', opcoes);
-
-        // Lógica de Expediente (Ex: 08:00 às 18:00)
-        const hora = agora.getHours();
-        const statusExp = document.getElementById('expediente');
-        if (hora >= 8 && hora < 18) {
-            statusExp.innerText = "● EXPEDIENTE ATIVO";
-            statusExp.className = "status-badge status-on";
+        const h = agora.getHours();
+        const status = document.getElementById('txt-status');
+        if (h >= 8 && h < 18) {
+            status.innerText = "● EXPEDIENTE ATIVO";
+            status.className = "status-badge on";
         } else {
-            statusExp.innerText = "○ FORA DE HORÁRIO";
-            statusExp.className = "status-badge status-off";
+            status.innerText = "○ FORA DE HORÁRIO";
+            status.className = "status-badge off";
         }
     }
 
-    async function init() {
+    // 2. Inicialização da IA
+    async function carregarIA() {
         try {
             await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
             await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
             await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-            atualizarRelogio();
-            setInterval(atualizarRelogio, 1000);
-            treinarIA();
-        } catch (e) { console.error("Erro IA"); }
+            treinarRostos();
+            setInterval(moverRelogio, 1000);
+            moverRelogio();
+        } catch (e) { alert("Erro ao carregar IA. Verifique sua internet."); }
     }
 
-    // Mantendo a lógica de biometria que já funcionou para você
-    function treinarIA() {
-        const faces = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
-        const descriptors = Object.keys(faces).map(nome => new faceapi.LabeledFaceDescriptors(nome, [new Float32Array(faces[nome])]));
+    function treinarRostos() {
+        const dados = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
+        const descriptors = Object.keys(dados).map(nome => new faceapi.LabeledFaceDescriptors(nome, [new Float32Array(dados[nome])]));
         if (descriptors.length > 0) faceMatcher = new faceapi.FaceMatcher(descriptors, 0.6);
     }
 
-    async function iniciarValidacao() {
-        document.getElementById('video-container').style.display = 'block';
-        document.getElementById('btn-auth').classList.add('hidden');
+    // 3. Processo de Ponto
+    async function iniciarLeitura() {
+        const container = document.getElementById('video-container');
+        container.classList.remove('hidden');
+        container.classList.add('active-cam');
+        document.getElementById('btn-ponto').classList.add('hidden');
+
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
         const video = document.getElementById('video');
         video.srcObject = stream;
 
-        const loop = setInterval(async () => {
-            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-            if (detection) {
+        const interval = setInterval(async () => {
+            const detect = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+            
+            if (detect) {
                 if (!faceMatcher) {
-                    const nome = prompt("Cadastre seu nome:");
-                    if(nome) {
+                    const nome = prompt("Primeiro acesso. Qual seu nome completo?");
+                    if (nome) {
                         const banco = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
-                        banco[nome] = Array.from(detection.descriptor);
+                        banco[nome] = Array.from(detect.descriptor);
                         localStorage.setItem('radar_biometria', JSON.stringify(banco));
-                        location.reload();
+                        alert("Biometria cadastrada!"); location.reload();
                     }
                 } else {
-                    const match = faceMatcher.findBestMatch(detection.descriptor);
-                    if (match.label !== 'unknown') {
-                        clearInterval(loop);
+                    const result = faceMatcher.findBestMatch(detect.descriptor);
+                    if (result.label !== 'unknown') {
+                        clearInterval(interval);
                         stream.getTracks().forEach(t => t.stop());
-                        confirmarBatida(match.label);
+                        registrarPonto(result.label);
                     }
                 }
             }
         }, 600);
     }
 
-    function confirmarBatida(nome) {
+    function registrarPonto(nome) {
         let pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
         const hoje = new Date().toLocaleDateString('pt-BR');
+        
         if (pontos.filter(p => p.nome === nome && p.data === hoje).length >= 4) {
-            alert("Limite de 4 batidas atingido!"); location.reload(); return;
+            alert("Limite de 4 batidas diárias atingido para " + nome);
+            location.reload(); return;
         }
+
         pontos.push({ nome: nome, data: hoje, hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5) });
         localStorage.setItem('radar_pontos', JSON.stringify(pontos));
         alert("Ponto de " + nome + " registrado com sucesso!");
         location.reload();
     }
 
-    function abrirGestao() {
-        if(prompt("Senha ADM:") === 'radar2025') {
-            // Reaproveite a função de relatório do código anterior aqui
-            alert("Redirecionando para Relatórios..."); 
+    // 4. Painel Administrativo FUNCIONAL
+    function entrarNoAdm() {
+        const senha = prompt("Digite a senha administrativa:");
+        if (senha === 'radar2025') {
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('admin-app').classList.remove('hidden');
+            gerarRelatorios();
+        } else {
+            alert("Senha incorreta!");
         }
     }
 
-    init();
+    function gerarRelatorios() {
+        const pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
+        const biometria = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
+        const nomes = Object.keys(biometria);
+        let html = '';
+
+        nomes.forEach(nome => {
+            html += `
+                <div style="margin-bottom: 50px; page-break-after: always;">
+                    <center>
+                        <div class="logo-text">RADAR</div>
+                        <p><b>Relatório Individual:</b> ${nome}</p>
+                    </center>
+                    <table>
+                        <thead>
+                            <tr><th>Data</th><th>ENTRADA</th><th>ALMOÇO</th><th>V. ALMOÇO</th><th>SAÍDA</th></tr>
+                        </thead>
+                        <tbody>`;
+            
+            const meusPontos = pontos.filter(p => p.nome === nome);
+            const diasUnicos = [...new Set(meusPontos.map(p => p.data))].sort();
+
+            diasUnicos.forEach(dia => {
+                const batidasDia = meusPontos.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
+                html += `
+                    <tr>
+                        <td>${dia}</td>
+                        <td>${batidasDia[0]?.hora || '-'}</td>
+                        <td>${batidasDia[1]?.hora || '-'}</td>
+                        <td>${batidasDia[2]?.hora || '-'}</td>
+                        <td>${batidasDia[3]?.hora || '-'}</td>
+                    </tr>`;
+            });
+
+            html += `</tbody></table>
+                    <div style="display: flex; justify-content: space-between; margin-top: 50px;">
+                        <div style="border-top: 1px solid #000; width: 45%; text-align: center; font-size: 12px;">Assinatura do Colaborador</div>
+                        <div style="border-top: 1px solid #000; width: 45%; text-align: center; font-size: 12px;">Assinatura Radar Comercial</div>
+                    </div>
+                </div>`;
+        });
+
+        document.getElementById('lista-relatorios').innerHTML = html || '<p>Nenhum registro encontrado.</p>';
+    }
+
+    carregarIA();
 </script>
 </body>
 </html>
