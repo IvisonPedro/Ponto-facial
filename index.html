@@ -15,16 +15,30 @@
         .time { font-size: 3rem; font-weight: 800; font-family: monospace; }
         #video-container { width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; border: 4px solid #e2e8f0; }
         video { width: 100%; display: block; transform: scaleX(-1); }
-        button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.3s; }
         .btn-main { background: var(--primary); color: white; margin-top: 10px; }
+        .btn-success { background: var(--success); color: white; margin-top: 10px; }
         .btn-adm { background: transparent; color: #64748b; margin-top: 15px; font-size: 0.8rem; text-decoration: underline; }
         .admin-screen { width: 100%; max-width: 1000px; background: white; padding: 30px; border-radius: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-        th, td { border: 1px solid #000; padding: 8px; text-align: center; }
-        .resumo-horas { background: #f1f5f9; padding: 10px; margin-top: 5px; font-weight: bold; display: flex; justify-content: space-between; border: 1px solid #000; border-top: none; }
+        
+        /* Estilos da Tabela de Relatório */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; background: white; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: center; color: black; }
+        th { background: #f2f2f2 !important; }
+        .resumo-horas { background: #f8fafc; padding: 15px; margin-top: 0; font-weight: bold; display: flex; justify-content: space-between; border: 1px solid #000; border-top: none; color: black; }
+        
         .hidden { display: none !important; }
         .no-print { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-        @media print { .no-print { display: none !important; } .admin-screen { width: 100%; padding: 0; } }
+
+        /* CONFIGURAÇÃO DE IMPRESSÃO / PDF */
+        @media print {
+            body { background: white !important; }
+            .no-print, .btn-adm, button { display: none !important; }
+            .container { padding: 0 !important; display: block !important; }
+            .admin-screen { width: 100% !important; padding: 0 !important; box-shadow: none !important; }
+            .page-break { page-break-after: always !important; border-bottom: 2px dashed #ccc; margin-bottom: 20px; padding-bottom: 20px; }
+            table { width: 100% !important; }
+        }
     </style>
 </head>
 <body>
@@ -45,12 +59,22 @@
 <div class="container hidden" id="admin-app">
     <div class="admin-screen">
         <div class="no-print">
-            <input type="month" id="filtro-mes" style="padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
-            <button class="btn-main" style="width: auto; padding: 10px 20px;" onclick="renderizarRelatorios()">🔍 Filtrar Mês</button>
-            <button class="btn-main" style="width: auto; padding: 10px 20px; background: var(--success);" onclick="irParaCadastro()">+ Cadastrar Funcionário</button>
-            <button class="btn-main" style="width: auto; padding: 10px 20px; background: #64748b;" onclick="location.reload()">Sair</button>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; background: #f1f5f9; padding: 20px; border-radius: 15px;">
+                <label><b>Selecione o Mês do Relatório:</b></label>
+                <input type="month" id="filtro-mes" style="padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 200px;">
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-main" style="width: auto; padding: 10px 25px;" onclick="renderizarRelatorios()">🔍 Gerar Relatório</button>
+                    <button id="btn-print-trigger" class="btn-success hidden" style="width: auto; padding: 10px 25px;" onclick="window.print()">🖨️ Salvar como PDF</button>
+                </div>
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                <button class="btn-main" style="width: auto; padding: 10px 20px; background: var(--success);" onclick="irParaCadastro()">+ Novo Funcionário</button>
+                <button class="btn-main" style="width: auto; padding: 10px 20px; background: #64748b;" onclick="location.reload()">Sair do Painel</button>
+            </div>
         </div>
-        <div id="relatorios-container"></div>
+        
+        <div id="relatorios-container">
+            </div>
     </div>
 </div>
 
@@ -70,10 +94,9 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-    const JORNADA_DIARIA_MINUTOS = 525; // 8h45min (Exemplo de jornada Radar)
+    const JORNADA_DIARIA_MINUTOS = 525; // 8h45min
     let faceMatcher = null;
 
-    // Relógio
     setInterval(() => {
         const agora = new Date();
         document.getElementById('txt-time').innerText = agora.toLocaleTimeString('pt-BR');
@@ -92,6 +115,7 @@
     }
 
     function diffMinutos(h1, h2) {
+        if(!h1 || !h2 || h1==='-' || h2==='-') return 0;
         const [aH, aM] = h1.split(':').map(Number);
         const [bH, bM] = h2.split(':').map(Number);
         return (bH * 60 + bM) - (aH * 60 + aM);
@@ -104,8 +128,8 @@
     }
 
     window.renderizarRelatorios = async () => {
-        const mesFiltro = document.getElementById('filtro-mes').value; // Formato YYYY-MM
-        if (!mesFiltro) return alert("Selecione o mês");
+        const mesFiltro = document.getElementById('filtro-mes').value; 
+        if (!mesFiltro) return alert("Por favor, selecione o mês e o ano.");
         
         const [ano, mes] = mesFiltro.split('-');
         const dataBusca = `/${mes}/${ano}`; 
@@ -118,17 +142,23 @@
         const nomes = [...new Set(todosPontos.map(p => p.nome))];
         let html = '';
 
+        if(nomes.length === 0) {
+            document.getElementById('relatorios-container').innerHTML = "<p style='text-align:center; padding:20px;'>Nenhum registro encontrado para este período.</p>";
+            document.getElementById('btn-print-trigger').classList.add('hidden');
+            return;
+        }
+
         nomes.forEach(nome => {
             const pontosUser = todosPontos.filter(p => p.nome === nome);
-            const dias = [...new Set(pontosUser.map(p => p.data))];
+            const dias = [...new Set(pontosUser.map(p => p.data))].sort();
             let saldoTotalMes = 0;
             let linhas = '';
 
             dias.forEach(dia => {
                 const b = pontosUser.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
                 let minutosTrabalhados = 0;
-                if(b[0] && b[1]) minutosTrabalhados += diffMinutos(b[0].hora, b[1].hora);
-                if(b[2] && b[3]) minutosTrabalhados += diffMinutos(b[2].hora, b[3].hora);
+                minutosTrabalhados += diffMinutos(b[0]?.hora, b[1]?.hora);
+                minutosTrabalhados += diffMinutos(b[2]?.hora, b[3]?.hora);
                 
                 const extraDia = minutosTrabalhados - JORNADA_DIARIA_MINUTOS;
                 saldoTotalMes += extraDia;
@@ -136,26 +166,39 @@
                 linhas += `<tr>
                     <td>${dia}</td><td>${b[0]?.hora || '-'}</td><td>${b[1]?.hora || '-'}</td>
                     <td>${b[2]?.hora || '-'}</td><td>${b[3]?.hora || '-'}</td>
-                    <td>${formatarHoras(minutosTrabalhados)}</td><td>${formatarHoras(extraDia)}</td>
+                    <td>${formatarHoras(minutosTrabalhados)}</td>
+                    <td style="color:${extraDia < 0 ? 'red' : 'green'}">${formatarHoras(extraDia)}</td>
                 </tr>`;
             });
 
-            html += `<div style="margin-bottom:50px; page-break-after: always;">
-                <h2>Radar Comercial LTDA - Espelho de Ponto</h2>
-                <p><b>Colaborador:</b> ${nome} | <b>Período:</b> ${mes}/${ano}</p>
+            html += `<div class="page-break">
+                <div style="text-align:center; border-bottom: 2px solid #000; margin-bottom: 10px;">
+                    <h2 style="margin:0">RADAR COMERCIAL LTDA</h2>
+                    <p style="margin:5px 0">ESPELHO DE PONTO MENSAL - ${mes}/${ano}</p>
+                </div>
+                <p><b>Colaborador:</b> ${nome.toUpperCase()}</p>
                 <table>
-                    <thead><tr><th>DATA</th><th>ENTRADA</th><th>SAÍDA 1</th><th>VOLTA 2</th><th>SAÍDA FINAL</th><th>TOTAL DIA</th><th>EXTRA/NEG</th></tr></thead>
+                    <thead>
+                        <tr><th>DATA</th><th>ENTRADA</th><th>S. ALMOÇO</th><th>V. ALMOÇO</th><th>SAÍDA</th><th>TOTAL TRAB.</th><th>SALDO DIA</th></tr>
+                    </thead>
                     <tbody>${linhas}</tbody>
                 </table>
                 <div class="resumo-horas">
-                    <span>JORNADA DIÁRIA BASE: 08:45</span>
-                    <span>SALDO TOTAL DO MÊS: ${formatarHoras(saldoTotalMes)}</span>
+                    <span>JORNADA PADRÃO: 08:45</span>
+                    <span style="color:${saldoTotalMes < 0 ? 'red' : 'green'}">SALDO ACUMULADO NO MÊS: ${formatarHoras(saldoTotalMes)}</span>
+                </div>
+                <div style="margin-top: 40px; display: flex; justify-content: space-between;">
+                    <div style="border-top: 1px solid #000; width: 45%; text-align: center; font-size: 10px; padding-top: 5px;">Assinatura do Colaborador</div>
+                    <div style="border-top: 1px solid #000; width: 45%; text-align: center; font-size: 10px; padding-top: 5px;">Radar Comercial LTDA</div>
                 </div>
             </div>`;
         });
-        document.getElementById('relatorios-container').innerHTML = html || 'Sem registros para este mês.';
+        
+        document.getElementById('relatorios-container').innerHTML = html;
+        document.getElementById('btn-print-trigger').classList.remove('hidden');
     }
 
+    // --- FUNÇÕES DE CÂMERA E CADASTRO PERMANECEM ---
     window.iniciarLeitura = async (cadastro) => {
         const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
         const video = document.getElementById('video');
@@ -166,9 +209,8 @@
                 clearInterval(interval);
                 stream.getTracks().forEach(t => t.stop());
                 if (cadastro) {
-                    const nome = prompt("Nome completo do Funcionário:");
+                    const nome = prompt("Nome do Novo Funcionário:");
                     if (nome) await setDoc(doc(db, "biometria", nome), { descriptor: Array.from(detect.descriptor) });
-                    alert("Cadastrado com sucesso!");
                     location.reload();
                 } else {
                     const res = faceMatcher?.findBestMatch(detect.descriptor);
@@ -176,10 +218,10 @@
                         const hoje = new Date().toLocaleDateString('pt-BR');
                         const q = query(collection(db, "pontos"), where("nome", "==", res.label), where("data", "==", hoje));
                         const s = await getDocs(q);
-                        if (s.size >= 4) return alert("Limite de 4 batidas diárias atingido.");
+                        if (s.size >= 4) return alert("Máximo de 4 batidas atingido.");
                         await addDoc(collection(db, "pontos"), { nome: res.label, data: hoje, hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5), timestamp: Date.now() });
-                        alert(`Ponto registrado: ${res.label} (${s.size + 1}/4)`);
-                    } else alert("Rosto não identificado.");
+                        alert("Ponto batido!");
+                    } else alert("Não reconhecido.");
                     location.reload();
                 }
             }
@@ -187,7 +229,7 @@
     }
 
     window.entrarNoAdm = () => { if(prompt("Senha:")==='radar2025'){ document.getElementById('main-app').classList.add('hidden'); document.getElementById('admin-app').classList.remove('hidden'); }};
-    window.irParaCadastro = () => { document.getElementById('admin-app').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); document.getElementById('btn-ponto').innerText = "ESCANEAR NOVO FUNCIONÁRIO"; document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true); };
+    window.irParaCadastro = () => { document.getElementById('admin-app').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); document.getElementById('btn-ponto').innerText = "CAPTURAR BIOMETRIA"; document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true); };
 
     carregarIA();
 </script>
