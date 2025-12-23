@@ -9,24 +9,29 @@
         :root { --primary: #003366; --success: #16a34a; --bg: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; justify-content: center; }
-        .card { background: white; width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
+        .card { background: white; width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
         
-        .logo-text { font-size: 32px; font-weight: 900; color: var(--primary); letter-spacing: 2px; border: 4px solid var(--primary); display: inline-block; padding: 5px 15px; border-radius: 4px; text-transform: uppercase; }
-        .clock-display { background: #1e293b; color: white; padding: 20px; border-radius: 20px; margin: 20px 0; }
+        .logo-text { font-size: 28px; font-weight: 900; color: var(--primary); letter-spacing: 1px; border: 3px solid var(--primary); display: inline-block; padding: 5px 12px; border-radius: 4px; text-transform: uppercase; margin-bottom: 5px; }
+        .clock-display { background: #1e293b; color: white; padding: 15px; border-radius: 15px; margin: 15px 0; }
         .time { font-size: 3rem; font-weight: 800; font-family: monospace; }
         
-        #video-container { width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; border: 4px solid #e2e8f0; }
+        #video-container { width: 100%; border-radius: 15px; overflow: hidden; margin: 15px 0; background: #000; border: 3px solid #e2e8f0; }
         video { width: 100%; display: block; transform: scaleX(-1); }
         
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; }
-        button { padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
+        button { padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+
         .hidden { display: none !important; }
         
+        /* Tabela de Relatório Flexível */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
-        th, td { border: 1px solid #000; padding: 8px; text-align: center; }
-        @media print { .no-print { display: none !important; } }
+        th, td { border: 1px solid #000; padding: 6px; text-align: center; }
+        .batida-tag { display: inline-block; background: #e2e8f0; padding: 2px 5px; border-radius: 4px; margin: 2px; font-weight: bold; }
+        
+        @media print { .no-print { display: none !important; } .container { display: block; padding: 0; } .card { max-width: 100%; box-shadow: none; } .page-break { page-break-after: always; } }
     </style>
 </head>
 <body>
@@ -40,15 +45,15 @@
 </div>
 
 <div class="container hidden" id="super-adm-screen">
-    <div class="card" style="max-width: 600px; text-align: left;">
+    <div class="card">
         <h3>🚀 Painel do Revendedor</h3>
         <input type="text" id="new-id" placeholder="ID (ex: radar)">
         <input type="text" id="new-nome" placeholder="Nome Fantasia">
         <input type="color" id="new-cor" value="#003366">
         <input type="text" id="new-senha" placeholder="Senha do Cliente">
-        <button class="btn-success" onclick="salvarNovaEmpresa()">CADASTRAR</button>
-        <div id="lista-empresas" style="margin-top: 20px;"></div>
-        <button onclick="location.reload()">Sair</button>
+        <button class="btn-success" onclick="salvarNovaEmpresa()">CADASTRAR CLIENTE</button>
+        <div id="lista-empresas" style="margin-top: 15px; text-align: left;"></div>
+        <button class="btn-primary" onclick="location.reload()">Sair do Painel</button>
     </div>
 </div>
 
@@ -60,14 +65,33 @@
             <div id="txt-date" style="font-size: 14px;">---</div>
         </div>
         <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
-        <button class="btn-primary" style="font-size: 18px;" onclick="iniciarLeitura(false)">REGISTRAR PONTO</button>
-        <button style="background:transparent; color:#64748b; text-decoration:underline;" onclick="entrarNoAdm()">Painel Administrativo</button>
+        <button id="btn-ponto" class="btn-primary" style="font-size: 18px; padding: 20px;" onclick="iniciarLeitura(false)">REGISTRAR PONTO</button>
+        <button style="background:transparent; color:#64748b; text-decoration:underline; font-size: 12px;" onclick="entrarNoAdm()">Painel Administrativo</button>
+    </div>
+</div>
+
+<div class="container hidden" id="admin-app">
+    <div class="card" style="max-width: 900px; text-align: left;">
+        <div class="no-print" style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="btn-primary" style="width:auto;" onclick="location.reload()">⬅ Voltar</button>
+            <button class="btn-success" style="width:auto;" onclick="irParaCadastro()">+ Novo Funcionário</button>
+        </div>
+        
+        <div class="no-print" id="lista-usuarios" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;"></div>
+
+        <div class="no-print" style="background: #f1f5f9; padding: 15px; border-radius: 12px; display: flex; gap: 10px; align-items: center;">
+            <input type="month" id="filtro-mes" style="width: 180px;">
+            <button class="btn-success" style="width: auto;" onclick="renderizarRelatorios()">🔍 Gerar Relatório</button>
+            <button class="btn-primary" id="btn-print" style="display:none; width: auto;" onclick="window.print()">🖨️ PDF</button>
+        </div>
+
+        <div id="relatorios-container"></div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, onSnapshot, query, orderBy, where, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, onSnapshot, query, orderBy, where, deleteDoc, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
@@ -86,7 +110,7 @@
     let configAtual = null;
     let faceMatcher = null;
 
-    // Login e Redirecionamento
+    // --- LOGIN E ACESSO ---
     window.validarEmpresa = async () => {
         const id = document.getElementById('input-empresa').value.toLowerCase().trim();
         if (id === "admin-mestre") {
@@ -95,15 +119,15 @@
             carregarEmpresasMestre();
             return;
         }
-        const docSnap = await getDoc(doc(db, "configuracoes_mestre", id));
-        if (docSnap.exists()) {
+        const snap = await getDoc(doc(db, "configuracoes_mestre", id));
+        if (snap.exists()) {
             window.location.href = window.location.origin + window.location.pathname + "?id=" + id;
         } else {
             alert("Empresa não encontrada.");
         }
     };
 
-    // Cadastro de Empresas (Super ADM)
+    // --- PAINEL REVENDA ---
     window.salvarNovaEmpresa = async () => {
         const id = document.getElementById('new-id').value.toLowerCase().trim();
         const dados = {
@@ -112,7 +136,7 @@
             senha: document.getElementById('new-senha').value
         };
         await setDoc(doc(db, "configuracoes_mestre", id), dados);
-        alert("Empresa salva!");
+        alert("Empresa cadastrada!");
         carregarEmpresasMestre();
     };
 
@@ -121,11 +145,15 @@
         const lista = document.getElementById('lista-empresas');
         lista.innerHTML = "";
         snap.forEach(d => {
-            lista.innerHTML += `<p><b>${d.id}</b> - ${d.data().nome} <button onclick="excluirEmpresa('${d.id}')">X</button></p>`;
+            lista.innerHTML += `<div style="padding:8px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
+                <span><b>${d.id}</b> - ${d.data().nome}</span>
+                <button onclick="excluirEmpresa('${d.id}')" style="width:auto; padding:2px 10px; background:red; color:white;">Remover</button>
+            </div>`;
         });
     }
+    window.excluirEmpresa = async (id) => { if(confirm("Remover?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); carregarEmpresasMestre(); }};
 
-    // Inicialização Cliente
+    // --- CONFIGURAÇÃO DO CLIENTE ---
     if (empresaID) {
         const snap = await getDoc(doc(db, "configuracoes_mestre", empresaID));
         if (snap.exists()) {
@@ -140,7 +168,7 @@
         }
     }
 
-    // Lógica de Ponto sem Limite
+    // --- REGISTRO DE PONTO ---
     window.iniciarLeitura = async (cadastro) => {
         const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
         const video = document.getElementById('video');
@@ -151,13 +179,13 @@
                 clearInterval(interval);
                 stream.getTracks().forEach(t => t.stop());
                 if (cadastro) {
-                    const nome = prompt("Nome:");
+                    const nome = prompt("Nome completo:");
                     if (nome) await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { descriptor: Array.from(detect.descriptor) });
                     location.reload();
                 } else {
                     const res = faceMatcher?.findBestMatch(detect.descriptor);
                     if (res && res.label !== 'unknown') {
-                        audioBip.play(); // Toca o BIP
+                        audioBip.play();
                         const hoje = new Date().toLocaleDateString('pt-BR');
                         await addDoc(collection(db, `empresas/${empresaID}/pontos`), { 
                             nome: res.label, 
@@ -173,13 +201,77 @@
         }, 600);
     };
 
+    // --- RELATÓRIOS FLEXÍVEIS ---
+    window.renderizarRelatorios = async () => {
+        const mesFiltro = document.getElementById('filtro-mes').value;
+        if (!mesFiltro) return alert("Selecione o mês");
+        const [ano, mes] = mesFiltro.split('-');
+        const dataBusca = `/${mes}/${ano}`;
+        
+        const snap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
+        const pontos = [];
+        snap.forEach(d => { if(d.data().data.includes(dataBusca)) pontos.push(d.data()); });
+        
+        const nomes = [...new Set(pontos.map(p => p.nome))];
+        let html = '';
+
+        nomes.forEach(nome => {
+            const pUser = pontos.filter(p => p.nome === nome);
+            const dias = [...new Set(pUser.map(p => p.data))].sort();
+            let linhas = '';
+
+            dias.forEach(dia => {
+                const batidasDia = pUser.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
+                let tags = '';
+                batidasDia.forEach(b => tags += `<span class="batida-tag">${b.hora}</span>`);
+                
+                linhas += `<tr>
+                    <td>${dia}</td>
+                    <td style="text-align: left;">${tags}</td>
+                    <td class="no-print"><button class="btn-danger" style="padding:2px 8px; font-size:9px;" onclick="limparDia('${nome}','${dia}')">Limpar Dia</button></td>
+                </tr>`;
+            });
+
+            html += `<div class="page-break">
+                <h3 style="color:${configAtual.cor}; margin-bottom:5px;">${configAtual.nome}</h3>
+                <p><b>Colaborador:</b> ${nome} | <b>Mês:</b> ${mes}/${ano}</p>
+                <table>
+                    <thead><tr><th style="width:100px;">DATA</th><th>BATIDAS REGISTRADAS</th><th class="no-print" style="width:80px;">AÇÕES</th></tr></thead>
+                    <tbody>${linhas}</tbody>
+                </table>
+            </div>`;
+        });
+
+        document.getElementById('relatorios-container').innerHTML = html || "Sem registros.";
+        document.getElementById('btn-print').style.display = 'block';
+    };
+
+    window.limparDia = async (nome, data) => {
+        if(confirm(`Apagar todas as batidas de ${nome} no dia ${data}?`)) {
+            const q = query(collection(db, `empresas/${empresaID}/pontos`), where("nome", "==", nome), where("data", "==", data));
+            const snap = await getDocs(q);
+            const batch = writeBatch(db);
+            snap.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            renderizarRelatorios();
+        }
+    };
+
+    // --- AUXILIARES ---
     async function carregarIA() {
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
         onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
             const desc = [];
-            s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
+            const lista = document.getElementById('lista-usuarios');
+            lista.innerHTML = "";
+            s.forEach(d => {
+                desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)]));
+                lista.innerHTML += `<div style="background:#fff; border:1px solid #ddd; padding:5px 10px; border-radius:6px; font-size:11px;">
+                    ${d.id} <button onclick="excluirFuncionario('${d.id}')" style="background:none; color:red; border:none; cursor:pointer; font-weight:bold;">X</button>
+                </div>`;
+            });
             faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.6) : null;
         });
     }
@@ -190,7 +282,9 @@
         document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     }, 1000);
 
-    window.entrarNoAdm = () => { if(prompt("Senha:") === configAtual.senha) alert("Acesso ao painel liberado (implementar tela)"); };
+    window.entrarNoAdm = () => { if(prompt("Senha Adm:") === configAtual.senha) { document.getElementById('main-app').classList.add('hidden'); document.getElementById('admin-app').classList.remove('hidden'); } };
+    window.irParaCadastro = () => { document.getElementById('admin-app').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); document.getElementById('btn-ponto').innerText = "CAPTURAR ROSTO"; document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true); };
+    window.excluirFuncionario = async (n) => { if(confirm(`Excluir ${n}?`)) await deleteDoc(doc(db, `empresas/${empresaID}/biometria`, n)); }
 </script>
 </body>
 </html>
