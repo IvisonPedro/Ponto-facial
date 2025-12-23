@@ -20,10 +20,6 @@
         .time { font-size: 3.5rem; font-weight: 800; font-family: monospace; line-height: 1; }
         .date { font-size: 0.9rem; opacity: 0.7; margin-top: 10px; text-transform: uppercase; }
         
-        .status-badge { display: inline-block; margin-top: 15px; padding: 6px 16px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; }
-        .on { background: #dcfce7; color: #166534; }
-        .off { background: #fee2e2; color: #991b1b; }
-
         #video-container { position: relative; width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; border: 4px solid #e2e8f0; }
         video { width: 100%; display: block; transform: scaleX(-1); }
         
@@ -61,7 +57,6 @@
         <div class="clock-display">
             <div id="txt-time" class="time">00:00:00</div>
             <div id="txt-date" class="date">---</div>
-            <div id="txt-status" class="status-badge">...</div>
         </div>
         <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
         <button id="btn-ponto" class="btn-main" onclick="iniciarLeitura(false)">REGISTRAR MEU PONTO</button>
@@ -104,10 +99,6 @@
         const agora = new Date();
         document.getElementById('txt-time').innerText = agora.toLocaleTimeString('pt-BR');
         document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-        const h = agora.getHours();
-        const status = document.getElementById('txt-status');
-        status.innerText = (h >= 8 && h < 18) ? "● EXPEDIENTE ATIVO" : "○ FORA DE HORÁRIO";
-        status.className = "status-badge " + (h >= 8 && h < 18 ? "on" : "off");
     }
 
     async function carregarIA() {
@@ -169,6 +160,7 @@
     function registrarPonto(nome) {
         let pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
         const hoje = new Date().toLocaleDateString('pt-BR');
+        // REMOVIDO O LIMITE DE 4 BATIDAS
         pontos.push({ id: Date.now(), nome: nome, data: hoje, hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5) });
         localStorage.setItem('radar_pontos', JSON.stringify(pontos));
         alert("Ponto registrado: " + nome);
@@ -233,8 +225,9 @@
     function editarBatida(nome, dia) {
         let pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
         let bDia = pontos.filter(p => p.nome === nome && p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
+        const labels = ["ENTRADA", "ALMOÇO", "RETORNO", "SAÍDA"];
         for(let i=0; i<4; i++) {
-            let nH = prompt(`Horário ${i+1}:`, bDia[i]?.hora || "--:--");
+            let nH = prompt(`${labels[i]} (${dia}):`, bDia[i]?.hora || "--:--");
             if (nH && nH.includes(':')) {
                 if (bDia[i]) bDia[i].hora = nH;
                 else pontos.push({ id: Date.now()+i, nome: nome, data: dia, hora: nH });
@@ -276,7 +269,7 @@
                 <div class="cabecalho-empresa"><h2>${NOME_EMPRESA}</h2><p>CNPJ: ${CNPJ_EMPRESA}</p><p><b>RELATÓRIO DE FREQUÊNCIA</b></p></div>
                 <p>Colaborador(a): <b>${nome}</b></p>
                 <div class="resumo-horas"><span>TOTAL TRABALHADO: ${formatarMinutos(tT)}h</span><span style="color:${tE<0?'red':'#166534'}">SALDO EXTRAS: ${formatarMinutos(tE)}h</span></div>
-                <table><thead><tr><th>DATA</th><th>ENT 1</th><th>SAÍ 1</th><th>ENT 2</th><th>SAÍ 2</th><th>TOTAL</th><th>EXTRA</th><th class="no-print">EDIT</th></tr></thead><tbody>${linhas}</tbody></table>
+                <table><thead><tr><th>DATA</th><th>ENTRADA</th><th>ALMOÇO</th><th>RETORNO</th><th>SAÍDA</th><th>TOTAL</th><th>EXTRA</th><th class="no-print">EDIT</th></tr></thead><tbody>${linhas}</tbody></table>
                 <div style="display: flex; justify-content: space-between; margin-top: 50px;"><div style="border-top: 1px solid #000; width: 40%; text-align: center; font-size: 10px; padding-top: 5px;">Assinatura do Colaborador</div><div style="border-top: 1px solid #000; width: 40%; text-align: center; font-size: 10px; padding-top: 5px;">Radar Comercial LTDA</div></div>
             </div>`;
         });
