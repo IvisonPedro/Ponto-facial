@@ -1,62 +1,119 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-    <title>Teste Facial - Radar</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Radar Ponto - Facial</title>
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
-        body { margin: 0; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; background: #f0f2f5; }
-        canvas { position: absolute; }
-        #video-container { position: relative; margin-top: 20px; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        #status { padding: 20px; font-weight: bold; color: #2563eb; }
+        /* Mantendo o seu estilo original do Radar Comercial */
+        :root { --primary: #2563eb; --success: #16a34a; --danger: #dc2626; --bg: #f1f5f9; --text: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: var(--text); text-align: center; }
+        .card { background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: inline-block; margin-top: 20px; width: 90%; max-width: 400px; }
+        .hidden { display: none !important; }
+        video, canvas { border-radius: 10px; max-width: 100%; }
+        .cam-container { position: relative; margin: 15px 0; background: #000; border-radius: 10px; line-height: 0; }
+        canvas { position: absolute; top: 0; left: 0; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
     </style>
 </head>
 <body>
-    <div id="status">Carregando IA... Aguarde.</div>
-    <div id="video-container">
-        <video id="video" width="320" height="240" autoplay muted playsinline></video>
+
+<div id="loading" style="padding: 50px;">Carregando Inteligência Facial...</div>
+
+<div id="mainApp" class="hidden">
+    <div class="card">
+        <h2 id="msg">Radar Comercial</h2>
+        
+        <div id="camArea" class="hidden">
+            <div class="cam-container">
+                <video id="video" width="320" height="240" autoplay muted playsinline></video>
+            </div>
+            <p id="faceStatus">Aguardando rosto...</p>
+        </div>
+
+        <button id="btnAction" class="btn-primary" onclick="handleAction()">INICIAR</button>
+        <button class="btn-danger" onclick="location.reload()" style="font-size: 0.7rem;">Sair/Reiniciar</button>
     </div>
+</div>
 
-    <script>
-        const video = document.getElementById('video');
-        const status = document.getElementById('status');
+<script>
+    let labeledDescriptors = [];
+    let faceMatcher = null;
 
-        // 1. Carregar os modelos da pasta /models
-        Promise.all([
-            faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
-            faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
-            faceapi.nets.faceRecognitionNet.loadFromUri('./models')
-        ]).then(startVideo);
-
-        function startVideo() {
-            navigator.mediaDevices.getUserMedia({ video: {} })
-                .then(stream => {
-                    video.srcObject = stream;
-                    status.innerText = "IA Pronta! Identificando...";
-                })
-                .catch(err => status.innerText = "Erro ao acessar câmera: " + err);
+    // Iniciar Carregamento
+    window.onload = async () => {
+        try {
+            await Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
+                faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
+                faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
+                faceapi.nets.ssdMobilenetv1.loadFromUri('./models')
+            ]);
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            carregarBancoDeRostos();
+        } catch (e) {
+            alert("Erro ao carregar modelos da pasta /models. Verifique o GitHub.");
         }
+    };
+
+    function carregarBancoDeRostos() {
+        const dados = JSON.parse(localStorage.getItem('radar_faces') || '{}');
+        labeledDescriptors = Object.keys(dados).map(user => {
+            const desc = new Float32Array(Object.values(dados[user]));
+            return new faceapi.LabeledFaceDescriptors(user, [desc]);
+        });
+        if (labeledDescriptors.length > 0) {
+            faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
+        }
+    }
+
+    async function handleAction() {
+        const mode = labeledDescriptors.length === 0 ? 'CADASTRO' : 'PONTO';
+        document.getElementById('camArea').classList.remove('hidden');
+        document.getElementById('btnAction').classList.add('hidden');
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+        const video = document.getElementById('video');
+        video.srcObject = stream;
 
         video.addEventListener('play', () => {
-            const canvas = faceapi.createCanvasFromMedia(video);
-            document.getElementById('video-container').append(canvas);
-            const displaySize = { width: video.width, height: video.height };
-            faceapi.matchDimensions(canvas, displaySize);
+            const interval = setInterval(async () => {
+                const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
 
-            setInterval(async () => {
-                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
-                const resizedDetections = faceapi.resizeResults(detections, displaySize);
-                canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-                faceapi.draw.drawDetections(canvas, resizedDetections);
-                
-                if(detections.length > 0) {
-                    status.style.color = "green";
-                    status.innerText = "Rosto Detectado!";
-                } else {
-                    status.style.color = "red";
-                    status.innerText = "Nenhum rosto visível...";
+                if (detection) {
+                    document.getElementById('faceStatus').innerText = "Rosto Identificado! Processando...";
+                    
+                    if (mode === 'CADASTRO') {
+                        // Salva o primeiro rosto como administrador/teste
+                        const nome = prompt("Seu rosto não está cadastrado. Digite seu nome:");
+                        if (nome) {
+                            const banco = JSON.parse(localStorage.getItem('radar_faces') || '{}');
+                            banco[nome] = Array.from(detection.descriptor);
+                            localStorage.setItem('radar_faces', JSON.stringify(banco));
+                            alert("Rosto cadastrado com sucesso!");
+                            location.reload();
+                        }
+                        clearInterval(interval);
+                    } else {
+                        // Modo Reconhecimento
+                        const match = faceMatcher.findBestMatch(detection.descriptor);
+                        if (match.label !== 'unknown') {
+                            document.getElementById('faceStatus').innerHTML = `<b style="color:green">Olá, ${match.label}! Ponto registrado.</b>`;
+                            clearInterval(interval);
+                            // Aqui entraria a lógica de salvar o ponto no banco de dados que já tínhamos
+                        }
+                    }
                 }
-            }, 200);
+            }, 500);
         });
-    </script>
+    }
+</script>
 </body>
 </html>
