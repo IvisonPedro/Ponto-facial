@@ -8,81 +8,55 @@
     <style>
         :root { --primary: #003366; --accent: #2563eb; --success: #16a34a; --danger: #dc2626; --bg: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
-        
-        /* Layout Principal */
         .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
         .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
         
-        /* Logo Radar */
-        .logo-box { margin-bottom: 20px; }
         .logo-text { font-size: 28px; font-weight: 900; color: var(--primary); letter-spacing: 2px; border: 3px solid var(--primary); display: inline-block; padding: 5px 15px; }
-        .logo-sub { font-size: 12px; text-transform: uppercase; color: #64748b; margin-top: 5px; letter-spacing: 1px; }
-
-        /* Relógio Moderno */
-        .clock-display { background: #1e293b; color: white; padding: 30px 10px; border-radius: 20px; margin: 20px 0; box-shadow: inset 0 2px 10px rgba(0,0,0,0.3); }
-        .time { font-size: 3.5rem; font-weight: 800; font-family: monospace; line-height: 1; }
-        .date { font-size: 0.9rem; opacity: 0.7; margin-top: 10px; text-transform: uppercase; }
         
-        .status-badge { display: inline-block; margin-top: 15px; padding: 6px 16px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; }
-        .on { background: #dcfce7; color: #166534; }
-        .off { background: #fee2e2; color: #991b1b; }
-
-        /* Câmera */
-        #video-container { position: relative; width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; border: 4px solid transparent; transition: 0.3s; }
-        .active-cam { border-color: var(--accent) !important; }
+        .clock-display { background: #1e293b; color: white; padding: 30px 10px; border-radius: 20px; margin: 20px 0; }
+        .time { font-size: 3.5rem; font-weight: 800; font-family: monospace; }
+        
+        #video-container { position: relative; width: 100%; border-radius: 15px; overflow: hidden; margin: 20px 0; background: #000; display: none; }
         video { width: 100%; display: block; }
         
-        /* Botões */
-        button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1rem; }
-        .btn-main { background: var(--primary); color: white; margin-top: 10px; }
-        .btn-adm { background: transparent; color: #64748b; margin-top: 15px; font-size: 0.8rem; text-decoration: underline; }
-        .btn-danger { background: var(--danger); color: white; }
-
-        /* Painel ADM */
-        .admin-screen { width: 100%; max-width: 800px; background: white; padding: 30px; border-radius: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: center; }
-        th { background: #f8fafc; color: var(--primary); }
+        button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-main { background: var(--primary); color: white; }
+        
+        /* Estilos do Relatório */
+        .admin-screen { width: 100%; max-width: 900px; background: white; padding: 30px; border-radius: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+        .resumo-horas { display: flex; justify-content: space-around; background: #f1f5f9; padding: 10px; border-radius: 8px; margin: 10px 0; font-weight: bold; font-size: 13px; }
 
         .hidden { display: none !important; }
-        @media print { .no-print { display: none !important; } .print-only { display: block !important; } }
+        @media print { 
+            .no-print { display: none !important; } 
+            body { background: white; }
+            .admin-screen { max-width: 100%; padding: 0; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container no-print" id="main-app">
     <div class="card">
-        <div class="logo-box">
-            <div class="logo-text">RADAR</div>
-            <div class="logo-sub">Comercial - Controle de Ponto</div>
-        </div>
-
+        <div class="logo-text">RADAR</div>
         <div class="clock-display">
             <div id="txt-time" class="time">00:00:00</div>
-            <div id="txt-date" class="date">Carregando...</div>
-            <div id="txt-status" class="status-badge">VERIFICANDO...</div>
+            <div id="txt-date" style="font-size: 0.9rem; opacity: 0.7; margin-top:10px;"></div>
         </div>
-
-        <div id="video-container" class="hidden">
-            <video id="video" autoplay muted playsinline></video>
-        </div>
-
+        <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
         <button id="btn-ponto" class="btn-main" onclick="iniciarLeitura()">REGISTRAR PONTO</button>
-        <button class="btn-adm" onclick="entrarNoAdm()">Painel Administrativo</button>
+        <button style="background:none; color:#64748b; text-decoration:underline; font-size:12px;" onclick="entrarNoAdm()">Painel Administrativo</button>
     </div>
 </div>
 
 <div class="container hidden" id="admin-app">
     <div class="admin-screen">
-        <div class="no-print">
-            <h2 style="color: var(--primary); margin-top: 0;">Painel de Gestão Radar</h2>
-            <div style="display: flex; gap: 10px; margin-bottom: 30px;">
-                <button class="btn-main" style="width: auto;" onclick="window.print()">🖨️ Imprimir Folhas</button>
-                <button class="btn-danger" style="width: auto;" onclick="location.reload()">Sair do Painel</button>
-            </div>
-            <hr>
+        <div class="no-print" style="margin-bottom: 20px;">
+            <button class="btn-main" style="width:auto; padding:10px 20px;" onclick="window.print()">🖨️ Gerar PDF / Imprimir</button>
+            <button class="btn-main" style="width:auto; padding:10px 20px; background:#64748b;" onclick="location.reload()">Voltar</button>
         </div>
-        
         <div id="lista-relatorios"></div>
     </div>
 </div>
@@ -91,24 +65,13 @@
     let faceMatcher = null;
     const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
 
-    // 1. Relógio e Status de Expediente
+    // Funções de Tempo e IA (Mantidas conforme funcionamento anterior)
     function moverRelogio() {
         const agora = new Date();
         document.getElementById('txt-time').innerText = agora.toLocaleTimeString('pt-BR');
-        document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-        
-        const h = agora.getHours();
-        const status = document.getElementById('txt-status');
-        if (h >= 8 && h < 18) {
-            status.innerText = "● EXPEDIENTE ATIVO";
-            status.className = "status-badge on";
-        } else {
-            status.innerText = "○ FORA DE HORÁRIO";
-            status.className = "status-badge off";
-        }
+        document.getElementById('txt-date').innerText = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
     }
 
-    // 2. Inicialização da IA
     async function carregarIA() {
         try {
             await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
@@ -116,8 +79,7 @@
             await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
             treinarRostos();
             setInterval(moverRelogio, 1000);
-            moverRelogio();
-        } catch (e) { alert("Erro ao carregar IA. Verifique sua internet."); }
+        } catch (e) { console.error(e); }
     }
 
     function treinarRostos() {
@@ -126,36 +88,27 @@
         if (descriptors.length > 0) faceMatcher = new faceapi.FaceMatcher(descriptors, 0.6);
     }
 
-    // 3. Processo de Ponto
     async function iniciarLeitura() {
-        const container = document.getElementById('video-container');
-        container.classList.remove('hidden');
-        container.classList.add('active-cam');
-        document.getElementById('btn-ponto').classList.add('hidden');
-
+        document.getElementById('video-container').style.display = 'block';
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
         const video = document.getElementById('video');
         video.srcObject = stream;
-
         const interval = setInterval(async () => {
             const detect = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-            
-            if (detect) {
-                if (!faceMatcher) {
-                    const nome = prompt("Primeiro acesso. Qual seu nome completo?");
-                    if (nome) {
-                        const banco = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
-                        banco[nome] = Array.from(detect.descriptor);
-                        localStorage.setItem('radar_biometria', JSON.stringify(banco));
-                        alert("Biometria cadastrada!"); location.reload();
-                    }
-                } else {
-                    const result = faceMatcher.findBestMatch(detect.descriptor);
-                    if (result.label !== 'unknown') {
-                        clearInterval(interval);
-                        stream.getTracks().forEach(t => t.stop());
-                        registrarPonto(result.label);
-                    }
+            if (detect && faceMatcher) {
+                const result = faceMatcher.findBestMatch(detect.descriptor);
+                if (result.label !== 'unknown') {
+                    clearInterval(interval);
+                    stream.getTracks().forEach(t => t.stop());
+                    registrarPonto(result.label);
+                }
+            } else if (detect && !faceMatcher) {
+                const nome = prompt("Novo cadastro. Nome:");
+                if(nome) {
+                    const banco = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
+                    banco[nome] = Array.from(detect.descriptor);
+                    localStorage.setItem('radar_biometria', JSON.stringify(banco));
+                    location.reload();
                 }
             }
         }, 600);
@@ -163,74 +116,87 @@
 
     function registrarPonto(nome) {
         let pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
-        const hoje = new Date().toLocaleDateString('pt-BR');
-        
-        if (pontos.filter(p => p.nome === nome && p.data === hoje).length >= 4) {
-            alert("Limite de 4 batidas diárias atingido para " + nome);
-            location.reload(); return;
-        }
-
-        pontos.push({ nome: nome, data: hoje, hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5) });
+        pontos.push({ nome: nome, data: new Date().toLocaleDateString('pt-BR'), hora: new Date().toLocaleTimeString('pt-BR').substring(0, 5), timestamp: Date.now() });
         localStorage.setItem('radar_pontos', JSON.stringify(pontos));
-        alert("Ponto de " + nome + " registrado com sucesso!");
-        location.reload();
+        alert("Ponto registrado!"); location.reload();
     }
 
-    // 4. Painel Administrativo FUNCIONAL
+    // LÓGICA DE CÁLCULO DE HORAS
+    function calcularDiferenca(h1, h2) {
+        if (!h1 || !h2 || h1 === '-' || h2 === '-') return 0;
+        const [hh1, mm1] = h1.split(':').map(Number);
+        const [hh2, mm2] = h2.split(':').map(Number);
+        return (hh2 * 60 + mm2) - (hh1 * 60 + mm1);
+    }
+
+    function formatarMinutos(totalMin) {
+        const h = Math.floor(totalMin / 60);
+        const m = totalMin % 60;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+
     function entrarNoAdm() {
-        const senha = prompt("Digite a senha administrativa:");
-        if (senha === 'radar2025') {
+        if (prompt("Senha:") === 'radar2025') {
             document.getElementById('main-app').classList.add('hidden');
             document.getElementById('admin-app').classList.remove('hidden');
             gerarRelatorios();
-        } else {
-            alert("Senha incorreta!");
         }
     }
 
     function gerarRelatorios() {
         const pontos = JSON.parse(localStorage.getItem('radar_pontos') || '[]');
         const biometria = JSON.parse(localStorage.getItem('radar_biometria') || '{}');
-        const nomes = Object.keys(biometria);
         let html = '';
 
-        nomes.forEach(nome => {
-            html += `
-                <div style="margin-bottom: 50px; page-break-after: always;">
-                    <center>
-                        <div class="logo-text">RADAR</div>
-                        <p><b>Relatório Individual:</b> ${nome}</p>
-                    </center>
-                    <table>
-                        <thead>
-                            <tr><th>Data</th><th>ENTRADA</th><th>ALMOÇO</th><th>V. ALMOÇO</th><th>SAÍDA</th></tr>
-                        </thead>
-                        <tbody>`;
-            
-            const meusPontos = pontos.filter(p => p.nome === nome);
-            const diasUnicos = [...new Set(meusPontos.map(p => p.data))].sort();
+        Object.keys(biometria).forEach(nome => {
+            let totalMes = 0;
+            let totalSemana = 0;
+            const hoje = new Date();
+            const inicioSemana = new Date(hoje.setDate(hoje.getDate() - hoje.getDay()));
 
-            diasUnicos.forEach(dia => {
-                const batidasDia = meusPontos.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
-                html += `
-                    <tr>
-                        <td>${dia}</td>
-                        <td>${batidasDia[0]?.hora || '-'}</td>
-                        <td>${batidasDia[1]?.hora || '-'}</td>
-                        <td>${batidasDia[2]?.hora || '-'}</td>
-                        <td>${batidasDia[3]?.hora || '-'}</td>
-                    </tr>`;
+            let tabelaCorpo = '';
+            const meusPontos = pontos.filter(p => p.nome === nome);
+            const dias = [...new Set(meusPontos.map(p => p.data))].sort();
+
+            dias.forEach(dia => {
+                const b = meusPontos.filter(p => p.data === dia).sort((a,b) => a.hora.localeCompare(b.hora));
+                const h = [b[0]?.hora || '-', b[1]?.hora || '-', b[2]?.hora || '-', b[3]?.hora || '-'];
+                
+                // Cálculo: (Almoço - Entrada) + (Saída - Volta)
+                const turno1 = calcularDiferenca(h[0], h[1]);
+                const turno2 = calcularDiferenca(h[2], h[3]);
+                const totalDiaMin = turno1 + turno2;
+                
+                totalMes += totalDiaMin;
+                
+                // Verificar se é desta semana
+                const [d, m, y] = dia.split('/').map(Number);
+                if (new Date(y, m-1, d) >= inicioSemana) totalSemana += totalDiaMin;
+
+                tabelaCorpo += `<tr><td>${dia}</td><td>${h[0]}</td><td>${h[1]}</td><td>${h[2]}</td><td>${h[3]}</td><td><b>${formatarMinutos(totalDiaMin)}</b></td></tr>`;
             });
 
-            html += `</tbody></table>
-                    <div style="display: flex; justify-content: space-between; margin-top: 50px;">
-                        <div style="border-top: 1px solid #000; width: 45%; text-align: center; font-size: 12px;">Assinatura do Colaborador</div>
-                        <div style="border-top: 1px solid #000; width: 45%; text-align: center; font-size: 12px;">Assinatura Radar Comercial</div>
+            html += `
+                <div style="margin-bottom: 50px; page-break-after: always; border: 1px solid #eee; padding: 20px;">
+                    <center><div class="logo-text">RADAR</div><p>Folha de Ponto: <b>${nome}</b></p></center>
+                    
+                    <div class="resumo-horas">
+                        <span>TOTAL NA SEMANA: ${formatarMinutos(totalSemana)}h</span>
+                        <span>TOTAL NO MÊS: ${formatarMinutos(totalMes)}h</span>
+                    </div>
+
+                    <table>
+                        <thead><tr><th>Data</th><th>ENTRADA</th><th>ALMOÇO</th><th>V. ALMOÇO</th><th>SAÍDA</th><th>TOTAL DIA</th></tr></thead>
+                        <tbody>${tabelaCorpo}</tbody>
+                    </table>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-top: 60px;">
+                        <div style="border-top: 1px solid #000; width: 40%; text-align: center; font-size: 10px;">Assinatura do Colaborador</div>
+                        <div style="border-top: 1px solid #000; width: 40%; text-align: center; font-size: 10px;">Assinatura Radar Comercial</div>
                     </div>
                 </div>`;
         });
-
-        document.getElementById('lista-relatorios').innerHTML = html || '<p>Nenhum registro encontrado.</p>';
+        document.getElementById('lista-relatorios').innerHTML = html || 'Sem registros.';
     }
 
     carregarIA();
