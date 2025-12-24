@@ -21,6 +21,7 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-red { background: #dc2626; color: white; }
+        .btn-small { padding: 5px 10px; font-size: 12px; width: auto; margin: 0 2px; border-radius: 5px; }
         .hidden { display: none !important; }
         @media print { .no-print { display: none !important; } .page-break { page-break-after: always; border: 1px solid #000; padding: 20px; margin-bottom: 20px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; } }
     </style>
@@ -30,7 +31,6 @@
 <div id="lock-screen" class="hidden" style="background: #003366; position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
     <div class="card" style="max-width: 350px;">
         <h3>🛡️ Radar Revenda</h3>
-        <p>Acesse com sua senha mestra</p>
         <input type="password" id="master-pass" placeholder="Senha Mestra" style="text-align: center;">
         <button class="btn-primary" onclick="acessarRevenda()">ENTRAR NO PAINEL</button>
     </div>
@@ -84,7 +84,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, deleteDoc, getDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, deleteDoc, getDoc, query, orderBy, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
@@ -104,12 +104,8 @@
     let faceMatcher = null;
     let modoCadastro = false;
 
-    // --- INICIALIZAÇÃO CRÍTICA ---
     async function init() {
-        console.log("ID detectado na URL:", empresaID);
-
         if (!empresaID) {
-            // Se não tem ID, garante que a tela de revenda apareça
             document.getElementById('lock-screen').style.display = 'flex';
             document.getElementById('lock-screen').classList.remove('hidden');
             return;
@@ -119,31 +115,25 @@
             const snap = await getDoc(doc(db, "configuracoes_mestre", empresaID));
             if (snap.exists()) {
                 configEmpresa = snap.data();
-                // SUCESSO: Esconde bloqueio e mostra totem
                 document.getElementById('lock-screen').style.display = 'none';
                 document.getElementById('screen-totem').classList.remove('hidden');
-                
                 document.documentElement.style.setProperty('--primary', configEmpresa.cor);
                 document.getElementById('display-logo').innerHTML = configEmpresa.logo ? `<img src="${configEmpresa.logo}">` : `<h2>${configEmpresa.nome}</h2>`;
                 document.getElementById('adm-titulo').innerText = "Painel: " + configEmpresa.nome;
                 ligarCamera();
             } else {
-                alert("ERRO: Empresa '" + empresaID + "' não encontrada no banco de dados.");
+                alert("Empresa não encontrada.");
                 window.location.href = window.location.origin + window.location.pathname;
             }
-        } catch (e) {
-            console.error(e);
-            alert("Erro de conexão com o Firebase. Verifique sua internet.");
-        }
+        } catch (e) { alert("Erro de conexão."); }
     }
 
-    // --- FUNÇÕES DE REVENDA ---
     window.acessarRevenda = () => {
         if(document.getElementById('master-pass').value === SENHA_MESTRA) {
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('screen-mestre').classList.remove('hidden');
             listarClientes();
-        } else alert("Senha Mestra Incorreta");
+        } else alert("Senha Incorreta");
     };
 
     window.salvarCliente = async () => {
@@ -155,80 +145,88 @@
             cor: document.getElementById('m-cor').value, 
             logo: document.getElementById('m-logo').value 
         });
-        alert("Empresa cadastrada com sucesso!"); listarClientes();
+        alert("Salvo!"); listarClientes();
     };
 
     async function listarClientes() {
         const s = await getDocs(collection(db, "configuracoes_mestre"));
         let h = "<h4>Empresas Ativas:</h4>"; 
-        s.forEach(d => h += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; font-size:14px;">
-            <span><b>${d.id}</b> (${d.data().nome})</span>
-            <button onclick="window.delC('${d.id}')" style="width:auto; padding:5px; background:red; color:white; font-size:10px;">EXCLUIR</button>
+        s.forEach(d => h += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
+            <span><b>${d.id}</b></span>
+            <button class="btn-red btn-small" onclick="window.delC('${d.id}')">EXCLUIR</button>
         </div>`);
         document.getElementById('lista-clientes').innerHTML = h;
     }
     window.delC = async (id) => { if(confirm("Excluir empresa?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); listarClientes(); }};
 
-    // --- CAMERA E PONTO ---
     async function ligarCamera() {
-        try {
-            const weights = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
-            await faceapi.nets.tinyFaceDetector.loadFromUri(weights);
-            await faceapi.nets.faceLandmark68Net.loadFromUri(weights);
-            await faceapi.nets.faceRecognitionNet.loadFromUri(weights);
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            document.getElementById('video').srcObject = stream;
-            document.getElementById('status-msg').innerText = "Câmera Ativa";
+        const weights = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(weights);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(weights);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(weights);
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        document.getElementById('video').srcObject = stream;
+        document.getElementById('status-msg').innerText = "IA Pronta";
 
-            onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
-                const desc = []; s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
-                faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.6) : null;
-            });
-        } catch (e) { document.getElementById('status-msg').innerText = "Erro ao carregar câmera."; }
+        onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
+            const desc = []; s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
+            faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.6) : null;
+        });
     }
 
     window.processarAcao = async () => {
         const det = await faceapi.detectSingleFace(document.getElementById('video'), new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-        if(!det) return alert("Rosto não detectado. Centralize-se.");
+        if(!det) return alert("Rosto não detectado!");
 
         if(modoCadastro) {
             const nome = prompt("Nome do Funcionário:");
             const vh = prompt("Valor da Hora (Ex: 25.00):");
             if(nome && vh) {
-                await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { 
-                    descriptor: Array.from(det.descriptor), valorHora: parseFloat(vh) 
-                });
-                alert("Cadastro realizado!"); location.reload();
+                await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { descriptor: Array.from(det.descriptor), valorHora: parseFloat(vh) });
+                alert("Cadastrado!"); location.reload();
             }
         } else {
             const m = faceMatcher?.findBestMatch(det.descriptor);
             if(m && m.label !== 'unknown') {
-                const agora = new Date();
-                const hora = agora.toLocaleTimeString('pt-BR').substring(0,5);
-                await addDoc(collection(db, `empresas/${empresaID}/pontos`), { 
-                    nome: m.label, data: agora.toLocaleDateString('pt-BR'), hora: hora, timestamp: Date.now() 
-                });
-                alert("PONTO REGISTRADO: " + m.label + " às " + hora);
+                const agora = new Date(); const hora = agora.toLocaleTimeString('pt-BR').substring(0,5);
+                await addDoc(collection(db, `empresas/${empresaID}/pontos`), { nome: m.label, data: agora.toLocaleDateString('pt-BR'), hora: hora, timestamp: Date.now() });
+                alert("PONTO: " + m.label + " às " + hora);
             } else alert("Rosto não reconhecido.");
         }
     };
 
-    // --- PAINEL ADM ---
     window.abrirPainelEmpresa = () => {
         if(prompt("Senha Administrativa:") === configEmpresa.senha) {
             document.getElementById('screen-totem').classList.add('hidden');
             document.getElementById('screen-adm').classList.remove('hidden');
-        } else alert("Senha Incorreta");
+        }
     };
 
     window.entrarModoCadastro = () => {
         modoCadastro = true;
         document.getElementById('screen-adm').classList.add('hidden');
         document.getElementById('screen-totem').classList.remove('hidden');
-        document.getElementById('btn-main').innerText = "CAPTURAR AGORA";
+        document.getElementById('btn-main').innerText = "CAPTURAR ROSTO";
     };
 
-    // --- RELATÓRIOS E HOLERITES ---
+    // --- NOVAS FUNÇÕES: EXCLUIR E EDITAR ---
+    window.excluirFuncionario = async (nome) => {
+        if(confirm(`Tem certeza que deseja excluir o funcionário ${nome}? Isso removerá a biometria.`)) {
+            await deleteDoc(doc(db, `empresas/${empresaID}/biometria`, nome));
+            alert("Funcionário removido!");
+            gerarRelatorio(); // Atualiza a tela
+        }
+    };
+
+    window.editarValorHora = async (nome, valorAtual) => {
+        const novoValor = prompt(`Novo valor da hora para ${nome}:`, valorAtual);
+        if(novoValor && !isNaN(novoValor)) {
+            await updateDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { valorHora: parseFloat(novoValor) });
+            alert("Valor atualizado!");
+            gerarHolerite(); // Atualiza a tela
+        }
+    };
+
     async function carregarDados() {
         const mesSel = document.getElementById('filtro-mes').value;
         if(!mesSel) return alert("Selecione o mês!");
@@ -241,8 +239,10 @@
 
     window.gerarRelatorio = async () => {
         const d = await carregarDados(); if(!d) return;
-        let h = ""; const nomes = [...new Set(d.pontos.map(p => p.nome))].sort();
-        nomes.forEach(n => {
+        let h = ""; 
+        // Lista todos os funcionários da biometria para garantir que apareçam mesmo sem pontos
+        d.funcionarios.forEach(fDoc => {
+            const n = fDoc.id;
             let totalMins = 0; let rows = "";
             const meusPts = d.pontos.filter(p => p.nome === n);
             const datas = [...new Set(meusPts.map(p => p.data))].sort();
@@ -255,7 +255,14 @@
                 }
                 rows += `<tr><td>${dt}</td><td>${batidas.map(b=>b.hora).join(' | ')}</td><td>${Math.floor(totalMins/60)}h ${totalMins%60}m</td></tr>`;
             });
-            h += `<div class="page-break"><center><h2>${configEmpresa.nome}</h2><p>PONTO: ${d.mes}/${d.ano}</p></center><p><b>FUNC:</b> ${n.toUpperCase()}</p><table><tr><th>DATA</th><th>REGISTROS</th><th>ACUMULADO</th></tr>${rows}</table></div>`;
+            h += `<div class="page-break">
+                <div class="no-print" style="float:right;">
+                    <button class="btn-red btn-small" onclick="excluirFuncionario('${n}')">🗑️ EXCLUIR FUNCIONÁRIO</button>
+                </div>
+                <center><h2>${configEmpresa.nome}</h2><p>PONTO: ${d.mes}/${d.ano}</p></center>
+                <p><b>FUNC:</b> ${n.toUpperCase()}</p>
+                <table><tr><th>DATA</th><th>REGISTROS</th><th>ACUMULADO</th></tr>${rows}</table>
+            </div>`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
     };
@@ -277,7 +284,20 @@
                 }
             });
             const hDec = totalMins/60; const total = hDec * vh;
-            h += `<div class="page-break"><div style="border:2px solid #000; padding:20px;"><center><h2>${configEmpresa.nome}</h2><p>RECIBO SALARIAL - ${d.mes}/${d.ano}</p></center><p><b>NOME:</b> ${nome.toUpperCase()}</p><table><tr><th>DESCRIÇÃO</th><th>REF</th><th>VALOR</th></tr><tr><td>Horas Trabalhadas</td><td>${hDec.toFixed(2)}h</td><td>R$ ${total.toFixed(2)}</td></tr><tr><th colspan="2" align="right">LÍQUIDO:</th><th>R$ ${total.toFixed(2)}</th></tr></table><br><br><center>__________________________<br>Assinatura</center></div></div>`;
+            h += `<div class="page-break">
+                <div class="no-print" style="float:right;">
+                    <button class="btn-primary btn-small" onclick="editarValorHora('${nome}', ${vh})">✏️ EDITAR VALOR HORA</button>
+                </div>
+                <div style="border:2px solid #000; padding:20px;">
+                    <center><h2>${configEmpresa.nome}</h2><p>RECIBO SALARIAL - ${d.mes}/${d.ano}</p></center>
+                    <p><b>NOME:</b> ${nome.toUpperCase()}</p>
+                    <table><tr><th>DESCRIÇÃO</th><th>REF</th><th>VALOR</th></tr>
+                    <tr><td>Horas Trabalhadas</td><td>${hDec.toFixed(2)}h</td><td>R$ ${total.toFixed(2)}</td></tr>
+                    <tr><td>Valor da Hora</td><td>R$ ${vh.toFixed(2)}</td><td>-</td></tr>
+                    <tr style="font-size:18px;"><b><td colspan="2" align="right">LÍQUIDO:</td><td>R$ ${total.toFixed(2)}</td></b></tr></table>
+                    <br><br><center>__________________________<br>Assinatura</center>
+                </div>
+            </div>`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
     };
