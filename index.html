@@ -3,89 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radar Ponto - Integrado</title>
+    <title>Radar Ponto</title>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
-        :root { --primary: #003366; --success: #16a34a; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
-        .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; box-sizing: border-box; }
-        .card { background: white; width: 100%; max-width: 600px; padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
-        .logo-box { border: 2px solid var(--primary); border-radius: 10px; padding: 10px; margin-bottom: 15px; min-height: 60px; display: flex; align-items: center; justify-content: center; }
-        .logo-box img { max-height: 80px; }
-        .clock-box { background: #1e293b; color: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
-        .time { font-size: 3rem; font-weight: 800; font-family: monospace; }
-        #video-container { width: 100%; border-radius: 20px; overflow: hidden; background: #000; aspect-ratio: 4/3; position: relative; }
-        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        button { padding: 18px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; text-transform: uppercase; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-red { background: #dc2626; color: white; }
+        :root { --primary: #003366; --bg: #f8fafc; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; text-align: center; }
+        .container { display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { background: white; width: 100%; max-width: 500px; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .hidden { display: none !important; }
-        @media print { .no-print { display: none !important; } .page-break { page-break-after: always; border: 1px solid #000; padding: 20px; margin-bottom: 20px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; } }
+        #video { width: 100%; border-radius: 15px; background: #000; transform: scaleX(-1); }
+        button { padding: 15px; width: 100%; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-blue { background: var(--primary); color: white; }
+        .btn-red { background: #dc2626; color: white; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-<div id="loading-screen" style="position: fixed; inset: 0; background: white; z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column;">
-    <p>Conectando ao Radar...</p>
+<div id="loading" style="padding: 50px;">
+    <h2>Carregando Radar...</h2>
 </div>
 
-<div id="lock-screen" class="container hidden">
-    <div class="card" style="margin-top: 50px;">
+<div id="screen-lock" class="container hidden">
+    <div class="card">
         <h3>🛡️ Painel de Revenda</h3>
-        <input type="password" id="master-pass" placeholder="Senha Mestra" style="text-align: center;">
-        <button class="btn-primary" onclick="acessarRevenda()">ENTRAR</button>
+        <input type="password" id="pass-mestre" placeholder="Senha Mestra">
+        <button class="btn-blue" onclick="entrarRevenda()">ACESSAR PAINEL</button>
     </div>
 </div>
 
 <div id="screen-mestre" class="container hidden">
     <div class="card">
-        <h3>GERENCIAR CLIENTES (Coleção: radar)</h3>
-        <input id="m-id" placeholder="ID (ex: radar)">
-        <input id="m-nome" placeholder="Nome da Empresa">
-        <input id="m-senha" placeholder="Senha ADM">
-        <input type="color" id="m-cor" value="#003366" style="height:50px">
-        <input id="m-logo" placeholder="URL da Logo">
-        <button class="btn-success" onclick="salvarCliente()">SALVAR EM 'RADAR'</button>
-        <hr>
-        <div id="lista-clientes" style="text-align: left;"></div>
+        <h3>Nova Empresa (Coleção: radar)</h3>
+        <input id="new-id" placeholder="ID (ex: radar)">
+        <input id="new-nome" placeholder="Nome da Empresa">
+        <input id="new-senha" placeholder="Senha ADM">
+        <input type="color" id="new-cor" value="#003366" style="height:50px">
+        <button class="btn-blue" onclick="salvarEmpresa()">SALVAR NO BANCO</button>
         <button class="btn-red" onclick="location.reload()">SAIR</button>
     </div>
 </div>
 
 <div id="screen-totem" class="container hidden">
     <div class="card">
-        <div id="display-logo" class="logo-box"></div>
-        <div class="clock-box">
-            <div class="time" id="txt-time">00:00:00</div>
-            <div id="txt-date" style="font-size: 14px; opacity: 0.8;">...</div>
-        </div>
-        <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
-        <p id="status-msg">Iniciando IA...</p>
-        <button class="btn-red" id="btn-main" onclick="processarAcao()">REGISTRAR PONTO</button>
-        <a href="javascript:void(0)" onclick="abrirPainelEmpresa()" style="display:block; margin-top:20px; color:gray; font-size:13px;">Painel Administrativo</a>
-    </div>
-</div>
-
-<div id="screen-adm" class="container hidden">
-    <div class="card" style="max-width: 850px; text-align: left;">
-        <button class="btn-red" style="width:auto;" onclick="location.reload()">⬅ VOLTAR</button>
-        <h3 id="adm-titulo">Gestão de Ponto</h3>
-        <input type="month" id="filtro-mes" class="no-print">
-        <div style="display:flex; gap:5px; margin-bottom: 10px;" class="no-print">
-            <button class="btn-primary" onclick="gerarRelatorio()">📊 PONTO</button>
-            <button class="btn-success" onclick="gerarHolerite()" style="background:#059669;">💰 HOLERITE</button>
-            <button class="btn-primary" onclick="window.print()" style="background:#6366f1;">🖨️ PDF</button>
-        </div>
-        <button class="btn-success no-print" onclick="entrarModoCadastro()">+ NOVO FUNCIONÁRIO</button>
-        <div id="box-relatorio" style="margin-top:20px;"></div>
+        <div id="logo-empresa" style="margin-bottom:15px; font-weight:bold; font-size:20px;"></div>
+        <div style="font-size: 2rem; font-weight: bold; margin-bottom: 15px;" id="relogio">00:00:00</div>
+        <video id="video" autoplay muted playsinline></video>
+        <p id="msg">Iniciando Biometria...</p>
+        <button class="btn-blue" onclick="baterPonto()">REGISTRAR PONTO</button>
+        <button class="btn-red" style="margin-top:20px; font-size:12px;" onclick="admEmpresa()">PAINEL ADM</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, setDoc, getDocs, addDoc, query, orderBy, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
@@ -99,173 +71,61 @@
     const db = getFirestore(app);
     const params = new URLSearchParams(window.location.search);
     const empresaID = params.get('id')?.toLowerCase().trim();
-    const SENHA_MESTRA = "9988";
-
-    let configEmpresa = null;
-    let faceMatcher = null;
-    let modoCadastro = false;
 
     async function init() {
-        const loading = document.getElementById('loading-screen');
         if (!empresaID) {
-            loading.style.display = 'none';
-            document.getElementById('lock-screen').classList.remove('hidden');
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('screen-lock').classList.remove('hidden');
             return;
         }
 
         try {
-            // AJUSTADO PARA A SUA COLEÇÃO "radar"
+            // BUSCA NA COLEÇÃO "radar"
             const snap = await getDoc(doc(db, "radar", empresaID));
-            
+
             if (snap.exists()) {
-                configEmpresa = snap.data();
-                loading.style.display = 'none';
+                window.dadosEmpresa = snap.data();
+                document.getElementById('loading').classList.add('hidden');
                 document.getElementById('screen-totem').classList.remove('hidden');
-                document.documentElement.style.setProperty('--primary', configEmpresa.cor);
-                document.getElementById('display-logo').innerHTML = configEmpresa.logo ? `<img src="${configEmpresa.logo}">` : `<h2>${configEmpresa.nome}</h2>`;
-                ligarCamera();
+                document.getElementById('logo-empresa').innerText = window.dadosEmpresa.nome;
+                document.documentElement.style.setProperty('--primary', window.dadosEmpresa.cor);
+                abrirCamera();
             } else {
-                alert("ID '" + empresaID + "' não encontrado na coleção 'radar'.");
+                alert("EMPRESA NÃO ENCONTRADA!\nO ID '" + empresaID + "' não existe na coleção 'radar'.");
                 window.location.href = window.location.origin + window.location.pathname;
             }
         } catch (e) {
-            alert("Erro de conexão. Verifique as Regras do Firestore.");
+            alert("ERRO DE CONEXÃO: Verifique as regras do seu Firebase.");
+            console.error(e);
         }
     }
 
-    window.acessarRevenda = () => {
-        if(document.getElementById('master-pass').value === SENHA_MESTRA) {
-            document.getElementById('lock-screen').classList.add('hidden');
+    window.entrarRevenda = () => {
+        if(document.getElementById('pass-mestre').value === "9988") {
+            document.getElementById('screen-lock').classList.add('hidden');
             document.getElementById('screen-mestre').classList.remove('hidden');
-            listarClientes();
-        } else alert("Senha Incorreta");
+        } else { alert("Senha incorreta"); }
     };
 
-    window.salvarCliente = async () => {
-        const id = document.getElementById('m-id').value.toLowerCase().trim();
-        if(!id) return alert("Informe um ID");
-        // SALVANDO NA COLEÇÃO "radar"
-        await setDoc(doc(db, "radar", id), { 
-            nome: document.getElementById('m-nome').value, 
-            senha: document.getElementById('m-senha').value, 
-            cor: document.getElementById('m-cor').value, 
-            logo: document.getElementById('m-logo').value 
+    window.salvarEmpresa = async () => {
+        const id = document.getElementById('new-id').value.toLowerCase().trim();
+        if(!id) return alert("Digite um ID");
+        await setDoc(doc(db, "radar", id), {
+            nome: document.getElementById('new-nome').value,
+            senha: document.getElementById('new-senha').value,
+            cor: document.getElementById('new-cor').value
         });
-        alert("Salvo com sucesso!"); listarClientes();
+        alert("Empresa cadastrada! Acesse: " + window.location.origin + window.location.pathname + "?id=" + id);
     };
 
-    async function listarClientes() {
-        const s = await getDocs(collection(db, "radar"));
-        let h = "<h4>Documentos em 'radar':</h4>";
-        s.forEach(d => h += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
-            <span><b>${d.id}</b></span>
-            <button onclick="window.delC('${d.id}')" style="width:auto; padding:5px; background:red; color:white;">X</button>
-        </div>`);
-        document.getElementById('lista-clientes').innerHTML = h;
-    }
-    window.delC = async (id) => { if(confirm("Excluir?")) { await deleteDoc(doc(db, "radar", id)); listarClientes(); }};
-
-    async function ligarCamera() {
-        const weights = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
-        await faceapi.nets.tinyFaceDetector.loadFromUri(weights);
-        await faceapi.nets.faceLandmark68Net.loadFromUri(weights);
-        await faceapi.nets.faceRecognitionNet.loadFromUri(weights);
+    async function abrirCamera() {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         document.getElementById('video').srcObject = stream;
-        document.getElementById('status-msg').innerText = "Câmera Ativa";
-        onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
-            const desc = []; s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
-            faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.6) : null;
-        });
+        document.getElementById('msg').innerText = "Câmera Ativa";
     }
-
-    window.processarAcao = async () => {
-        const det = await faceapi.detectSingleFace(document.getElementById('video'), new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-        if(!det) return alert("Rosto não detectado!");
-        if(modoCadastro) {
-            const nome = prompt("Nome:");
-            const vh = prompt("Valor da Hora:");
-            if(nome && vh) {
-                await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { descriptor: Array.from(det.descriptor), valorHora: parseFloat(vh) });
-                location.reload();
-            }
-        } else {
-            const m = faceMatcher?.findBestMatch(det.descriptor);
-            if(m && m.label !== 'unknown') {
-                const agora = new Date();
-                const hora = agora.toLocaleTimeString('pt-BR').substring(0,5);
-                await addDoc(collection(db, `empresas/${empresaID}/pontos`), { nome: m.label, data: agora.toLocaleDateString('pt-BR'), hora: hora, timestamp: Date.now() });
-                alert("PONTO REGISTRADO: " + m.label);
-            } else alert("Não reconhecido.");
-        }
-    };
-
-    window.abrirPainelEmpresa = () => {
-        if(prompt("Senha ADM:") === configEmpresa.senha) {
-            document.getElementById('screen-totem').classList.add('hidden');
-            document.getElementById('screen-adm').classList.remove('hidden');
-        }
-    };
-
-    window.entrarModoCadastro = () => {
-        modoCadastro = true;
-        document.getElementById('screen-adm').classList.add('hidden');
-        document.getElementById('screen-totem').classList.remove('hidden');
-        document.getElementById('btn-main').innerText = "CAPTURAR ROSTO";
-    };
-
-    async function carregarDados() {
-        const mesSel = document.getElementById('filtro-mes').value;
-        if(!mesSel) return alert("Selecione o mês");
-        const [ano, mes] = mesSel.split('-');
-        const ptsSnap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
-        const funcSnap = await getDocs(collection(db, `empresas/${empresaID}/biometria`));
-        let pontos = []; ptsSnap.forEach(d => { if(d.data().data.includes(`/${mes}/${ano}`)) pontos.push(d.data()); });
-        return { pontos, funcionarios: funcSnap, mes, ano };
-    }
-
-    window.gerarRelatorio = async () => {
-        const d = await carregarDados(); if(!d) return;
-        let h = ""; const nomes = [...new Set(d.pontos.map(p => p.nome))].sort();
-        nomes.forEach(n => {
-            let totalMins = 0; let rows = "";
-            const meusPts = d.pontos.filter(p => p.nome === n);
-            const datas = [...new Set(meusPts.map(p => p.data))].sort();
-            datas.forEach(dt => {
-                const batidas = meusPts.filter(p => p.data === dt).sort((a,b) => a.hora.localeCompare(b.hora));
-                for(let i=0; i<batidas.length-1; i+=2){
-                    const [h1,m1] = batidas[i].hora.split(':').map(Number);
-                    const [h2,m2] = batidas[i+1].hora.split(':').map(Number);
-                    totalMins += (h2*60+m2)-(h1*60+m1);
-                }
-                rows += `<tr><td>${dt}</td><td>${batidas.map(b=>b.hora).join(' | ')}</td><td>${Math.floor(totalMins/60)}h ${totalMins%60}m</td></tr>`;
-            });
-            h += `<div class="page-break"><center><h2>${configEmpresa.nome}</h2><p>PONTO: ${d.mes}/${d.ano}</p></center><p><b>FUNC:</b> ${n}</p><table><tr><th>DATA</th><th>BATIDAS</th><th>ACUMULADO</th></tr>${rows}</table></div>`;
-        });
-        document.getElementById('box-relatorio').innerHTML = h;
-    };
-
-    window.gerarHolerite = async () => {
-        const d = await carregarDados(); if(!d) return;
-        let h = "";
-        d.funcionarios.forEach(fDoc => {
-            const f = fDoc.data(); const vh = f.valorHora || 0;
-            let totalMins = 0;
-            const meusPts = d.pontos.filter(p => p.nome === fDoc.id);
-            meusPts.forEach((p, i) => { if(i%2==0 && meusPts[i+1]){
-                const [h1,m1] = p.hora.split(':').map(Number); const [h2,m2] = meusPts[i+1].hora.split(':').map(Number);
-                totalMins += (h2*60+m2)-(h1*60+m1);
-            }});
-            const hDec = totalMins/60; const tot = hDec * vh;
-            h += `<div class="page-break"><div style="border:1px solid #000; padding:20px;"><center><h2>${configEmpresa.nome}</h2><p>RECIBO: ${d.mes}/${d.ano}</p></center><p><b>FUNC:</b> ${fDoc.id}</p><table><tr><th>DESCRIÇÃO</th><th>REF</th><th>VALOR</th></tr><tr><td>Horas</td><td>${hDec.toFixed(2)}h</td><td>R$ ${tot.toFixed(2)}</td></tr></table><br><br><center>__________________________<br>Assinatura</center></div></div>`;
-        });
-        document.getElementById('box-relatorio').innerHTML = h;
-    };
 
     setInterval(() => {
-        const d = new Date();
-        document.getElementById('txt-time').innerText = d.toLocaleTimeString('pt-BR');
-        document.getElementById('txt-date').innerText = d.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long'});
+        document.getElementById('relogio').innerText = new Date().toLocaleTimeString('pt-BR');
     }, 1000);
 
     init();
