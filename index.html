@@ -7,44 +7,55 @@
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
         :root { --primary: #003366; --success: #16a34a; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; overflow-x: hidden; }
         .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; box-sizing: border-box; }
         .card { background: white; width: 100%; max-width: 600px; padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
         .logo-box { border: 2px solid var(--primary); border-radius: 10px; padding: 10px; margin-bottom: 15px; min-height: 60px; display: flex; align-items: center; justify-content: center; }
-        .logo-box img { max-height: 80px; }
+        .logo-box img { max-height: 80px; max-width: 100%; }
         .clock-box { background: #1e293b; color: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
-        .time { font-size: 3.5rem; font-weight: 800; font-family: monospace; }
+        .time { font-size: 3rem; font-weight: 800; font-family: monospace; }
         #video-container { width: 100%; border-radius: 20px; overflow: hidden; background: #000; aspect-ratio: 4/3; position: relative; }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        button { padding: 18px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; font-size: 18px; margin-top: 10px; text-transform: uppercase; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; }
+        button { padding: 18px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; text-transform: uppercase; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-red { background: #dc2626; color: white; }
         .hidden { display: none !important; }
-        @media print { .no-print { display: none !important; } .page-break { page-break-after: always; border: 1px solid #000; padding: 20px; margin-bottom: 20px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; } }
+        
+        /* Estilos de Impressão */
+        @media print { 
+            .no-print { display: none !important; } 
+            .page-break { page-break-after: always; border: 1px solid #000; padding: 30px; margin-bottom: 20px; color: black; } 
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; } 
+            th, td { border: 1px solid #000; padding: 8px; text-align: center; font-size: 12px; } 
+        }
     </style>
 </head>
 <body>
 
-<div id="lock-screen" class="hidden" style="background: #003366; position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
-    <div class="card" style="max-width: 350px;">
-        <h3>🛡️ Radar Revenda</h3>
-        <p>Acesse com sua senha mestra</p>
+<div id="loading-screen" style="position: fixed; inset: 0; background: white; z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+    <div style="border: 4px solid #f3f3f3; border-top: 4px solid #003366; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+    <p>Iniciando Radar Ponto...</p>
+</div>
+
+<div id="lock-screen" class="container hidden">
+    <div class="card" style="margin-top: 50px;">
+        <h3>🛡️ Painel de Revenda</h3>
         <input type="password" id="master-pass" placeholder="Senha Mestra" style="text-align: center;">
-        <button class="btn-primary" onclick="acessarRevenda()">ENTRAR NO PAINEL</button>
+        <button class="btn-primary" onclick="acessarRevenda()">ENTRAR</button>
     </div>
 </div>
 
 <div id="screen-mestre" class="container hidden">
     <div class="card">
-        <h3>GERENCIAR CLIENTES</h3>
-        <input id="m-id" placeholder="ID da URL (ex: padaria)">
-        <input id="m-nome" placeholder="Nome da Empresa">
-        <input id="m-senha" placeholder="Senha ADM do Cliente">
+        <h3>GERENCIAR EMPRESAS</h3>
+        <input id="m-id" placeholder="ID da Empresa (ex: padaria-central)">
+        <input id="m-nome" placeholder="Nome Exibido">
+        <input id="m-senha" placeholder="Senha Administrativa">
         <input type="color" id="m-cor" value="#003366" style="height:50px">
-        <input id="m-logo" placeholder="URL da Logo">
-        <button class="btn-success" onclick="salvarCliente()">CADASTRAR EMPRESA</button>
+        <input id="m-logo" placeholder="URL da Logo (PNG)">
+        <button class="btn-success" onclick="salvarCliente()">CADASTRAR E GERAR LINK</button>
         <hr>
         <div id="lista-clientes" style="text-align: left;"></div>
         <button class="btn-red" onclick="location.reload()">SAIR</button>
@@ -59,32 +70,36 @@
             <div id="txt-date" style="font-size: 14px; opacity: 0.8;">...</div>
         </div>
         <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
-        <p id="status-msg">Iniciando...</p>
+        <p id="status-msg">Carregando IA Facial...</p>
         <button class="btn-red" id="btn-main" onclick="processarAcao()">REGISTRAR PONTO</button>
-        <a href="javascript:void(0)" onclick="abrirPainelEmpresa()" style="display:block; margin-top:15px; color:gray; font-size:13px;">Acesso Administrativo</a>
+        <a href="javascript:void(0)" onclick="abrirPainelEmpresa()" style="display:block; margin-top:20px; color:gray; font-size:13px;">Acesso Administrativo</a>
     </div>
 </div>
 
 <div id="screen-adm" class="container hidden">
     <div class="card" style="max-width: 850px; text-align: left;">
-        <button class="btn-red" style="width:auto; padding:10px;" onclick="location.reload()">⬅ VOLTAR</button>
+        <button class="btn-red" style="width:auto;" onclick="location.reload()">⬅ VOLTAR</button>
         <h3 id="adm-titulo">Painel Administrativo</h3>
+        
         <div class="no-print" style="background:#f1f5f9; padding:15px; border-radius:15px; margin-bottom:15px;">
             <input type="month" id="filtro-mes">
-            <div style="display:flex; gap:5px;">
-                <button class="btn-primary" onclick="gerarRelatorio()" style="font-size:14px;">📊 PONTO</button>
-                <button class="btn-success" onclick="gerarHolerite()" style="font-size:14px; background:#059669;">💰 HOLERITE</button>
-                <button class="btn-primary" onclick="window.print()" style="font-size:14px; background:#6366f1;">🖨️ PDF</button>
+            <div style="display:flex; gap:5px; flex-wrap: wrap;">
+                <button class="btn-primary" onclick="gerarRelatorio()" style="flex:1;">📊 FOLHA PONTO</button>
+                <button class="btn-success" onclick="gerarHolerite()" style="flex:1; background:#059669;">💰 HOLERITES</button>
+                <button class="btn-primary" onclick="window.print()" style="flex:1; background:#6366f1;">🖨️ IMPRIMIR PDF</button>
             </div>
         </div>
+        
         <button class="btn-success no-print" onclick="entrarModoCadastro()">+ NOVO FUNCIONÁRIO</button>
         <div id="box-relatorio" style="margin-top:20px;"></div>
     </div>
 </div>
 
+<style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, deleteDoc, getDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, setDoc, getDocs, addDoc, query, orderBy, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
@@ -104,13 +119,11 @@
     let faceMatcher = null;
     let modoCadastro = false;
 
-    // --- INICIALIZAÇÃO CRÍTICA ---
     async function init() {
-        console.log("ID detectado na URL:", empresaID);
-
+        const loading = document.getElementById('loading-screen');
+        
         if (!empresaID) {
-            // Se não tem ID, garante que a tela de revenda apareça
-            document.getElementById('lock-screen').style.display = 'flex';
+            loading.style.display = 'none';
             document.getElementById('lock-screen').classList.remove('hidden');
             return;
         }
@@ -119,57 +132,56 @@
             const snap = await getDoc(doc(db, "configuracoes_mestre", empresaID));
             if (snap.exists()) {
                 configEmpresa = snap.data();
-                // SUCESSO: Esconde bloqueio e mostra totem
-                document.getElementById('lock-screen').style.display = 'none';
+                loading.style.display = 'none';
                 document.getElementById('screen-totem').classList.remove('hidden');
                 
                 document.documentElement.style.setProperty('--primary', configEmpresa.cor);
                 document.getElementById('display-logo').innerHTML = configEmpresa.logo ? `<img src="${configEmpresa.logo}">` : `<h2>${configEmpresa.nome}</h2>`;
-                document.getElementById('adm-titulo').innerText = "Painel: " + configEmpresa.nome;
+                document.getElementById('adm-titulo').innerText = "Gestão: " + configEmpresa.nome;
+                
                 ligarCamera();
             } else {
-                alert("ERRO: Empresa '" + empresaID + "' não encontrada no banco de dados.");
+                alert("Empresa '" + empresaID + "' não cadastrada.");
                 window.location.href = window.location.origin + window.location.pathname;
             }
         } catch (e) {
             console.error(e);
-            alert("Erro de conexão com o Firebase. Verifique sua internet.");
+            alert("Erro de conexão. Verifique as Regras do Firebase Firestore.");
         }
     }
 
-    // --- FUNÇÕES DE REVENDA ---
     window.acessarRevenda = () => {
         if(document.getElementById('master-pass').value === SENHA_MESTRA) {
-            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('lock-screen').classList.add('hidden');
             document.getElementById('screen-mestre').classList.remove('hidden');
             listarClientes();
-        } else alert("Senha Mestra Incorreta");
+        } else alert("Senha Incorreta");
     };
 
     window.salvarCliente = async () => {
-        const id = document.getElementById('m-id').value.toLowerCase().trim();
-        if(!id) return alert("Digite um ID");
+        const id = document.getElementById('m-id').value.toLowerCase().replace(/\s+/g, '-').trim();
+        if(!id) return alert("Informe um ID");
         await setDoc(doc(db, "configuracoes_mestre", id), { 
             nome: document.getElementById('m-nome').value, 
             senha: document.getElementById('m-senha').value, 
             cor: document.getElementById('m-cor').value, 
             logo: document.getElementById('m-logo').value 
         });
-        alert("Empresa cadastrada com sucesso!"); listarClientes();
+        alert("Empresa salva! O link é: " + window.location.origin + window.location.pathname + "?id=" + id);
+        listarClientes();
     };
 
     async function listarClientes() {
         const s = await getDocs(collection(db, "configuracoes_mestre"));
-        let h = "<h4>Empresas Ativas:</h4>"; 
-        s.forEach(d => h += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; font-size:14px;">
-            <span><b>${d.id}</b> (${d.data().nome})</span>
-            <button onclick="window.delC('${d.id}')" style="width:auto; padding:5px; background:red; color:white; font-size:10px;">EXCLUIR</button>
+        let h = "<h4>Empresas:</h4>";
+        s.forEach(d => h += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+            <span><b>${d.id}</b></span>
+            <button onclick="window.delC('${d.id}')" style="width:auto; padding:5px 10px; background:red; color:white; font-size:10px;">EXCLUIR</button>
         </div>`);
         document.getElementById('lista-clientes').innerHTML = h;
     }
-    window.delC = async (id) => { if(confirm("Excluir empresa?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); listarClientes(); }};
+    window.delC = async (id) => { if(confirm("Remover cliente?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); listarClientes(); }};
 
-    // --- CAMERA E PONTO ---
     async function ligarCamera() {
         try {
             const weights = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
@@ -178,18 +190,18 @@
             await faceapi.nets.faceRecognitionNet.loadFromUri(weights);
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             document.getElementById('video').srcObject = stream;
-            document.getElementById('status-msg').innerText = "Câmera Ativa";
+            document.getElementById('status-msg').innerText = "Câmera On - Posicione o Rosto";
 
             onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
                 const desc = []; s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
                 faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.6) : null;
             });
-        } catch (e) { document.getElementById('status-msg').innerText = "Erro ao carregar câmera."; }
+        } catch (e) { alert("Erro ao acessar câmera. Use HTTPS."); }
     }
 
     window.processarAcao = async () => {
         const det = await faceapi.detectSingleFace(document.getElementById('video'), new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-        if(!det) return alert("Rosto não detectado. Centralize-se.");
+        if(!det) return alert("Rosto não detectado!");
 
         if(modoCadastro) {
             const nome = prompt("Nome do Funcionário:");
@@ -208,14 +220,13 @@
                 await addDoc(collection(db, `empresas/${empresaID}/pontos`), { 
                     nome: m.label, data: agora.toLocaleDateString('pt-BR'), hora: hora, timestamp: Date.now() 
                 });
-                alert("PONTO REGISTRADO: " + m.label + " às " + hora);
+                alert("SUCESSO: " + m.label + " às " + hora);
             } else alert("Rosto não reconhecido.");
         }
     };
 
-    // --- PAINEL ADM ---
     window.abrirPainelEmpresa = () => {
-        if(prompt("Senha Administrativa:") === configEmpresa.senha) {
+        if(prompt("Senha ADM:") === configEmpresa.senha) {
             document.getElementById('screen-totem').classList.add('hidden');
             document.getElementById('screen-adm').classList.remove('hidden');
         } else alert("Senha Incorreta");
@@ -225,13 +236,12 @@
         modoCadastro = true;
         document.getElementById('screen-adm').classList.add('hidden');
         document.getElementById('screen-totem').classList.remove('hidden');
-        document.getElementById('btn-main').innerText = "CAPTURAR AGORA";
+        document.getElementById('btn-main').innerText = "CAPTURAR BIOMETRIA";
     };
 
-    // --- RELATÓRIOS E HOLERITES ---
     async function carregarDados() {
         const mesSel = document.getElementById('filtro-mes').value;
-        if(!mesSel) return alert("Selecione o mês!");
+        if(!mesSel) { alert("Selecione o mês!"); return null; }
         const [ano, mes] = mesSel.split('-');
         const ptsSnap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
         const funcSnap = await getDocs(collection(db, `empresas/${empresaID}/biometria`));
@@ -255,7 +265,7 @@
                 }
                 rows += `<tr><td>${dt}</td><td>${batidas.map(b=>b.hora).join(' | ')}</td><td>${Math.floor(totalMins/60)}h ${totalMins%60}m</td></tr>`;
             });
-            h += `<div class="page-break"><center><h2>${configEmpresa.nome}</h2><p>PONTO: ${d.mes}/${d.ano}</p></center><p><b>FUNC:</b> ${n.toUpperCase()}</p><table><tr><th>DATA</th><th>REGISTROS</th><th>ACUMULADO</th></tr>${rows}</table></div>`;
+            h += `<div class="page-break"><center><h2>${configEmpresa.nome}</h2><p>PONTO: ${d.mes}/${d.ano}</p></center><p><b>FUNC:</b> ${n.toUpperCase()}</p><table><tr><th>DATA</th><th>REGISTROS</th><th>ACUMULADO NO DIA</th></tr>${rows}</table></div>`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
     };
@@ -277,7 +287,7 @@
                 }
             });
             const hDec = totalMins/60; const total = hDec * vh;
-            h += `<div class="page-break"><div style="border:2px solid #000; padding:20px;"><center><h2>${configEmpresa.nome}</h2><p>RECIBO SALARIAL - ${d.mes}/${d.ano}</p></center><p><b>NOME:</b> ${nome.toUpperCase()}</p><table><tr><th>DESCRIÇÃO</th><th>REF</th><th>VALOR</th></tr><tr><td>Horas Trabalhadas</td><td>${hDec.toFixed(2)}h</td><td>R$ ${total.toFixed(2)}</td></tr><tr><th colspan="2" align="right">LÍQUIDO:</th><th>R$ ${total.toFixed(2)}</th></tr></table><br><br><center>__________________________<br>Assinatura</center></div></div>`;
+            h += `<div class="page-break"><div style="border:2px solid #000; padding:20px;"><center><h2>${configEmpresa.nome}</h2><p>RECIBO SALARIAL - ${d.mes}/${d.ano}</p></center><p><b>NOME:</b> ${nome.toUpperCase()}</p><table><tr><th>DESCRIÇÃO</th><th>REF</th><th>VALOR</th></tr><tr><td>Horas Trabalhadas</td><td>${hDec.toFixed(2)}h</td><td>R$ ${total.toFixed(2)}</td></tr><tr><td>Valor por Hora</td><td>R$ ${vh.toFixed(2)}</td><td>-</td></tr><tr style="font-size:18px;"><b><td colspan="2" align="right">VALOR LÍQUIDO:</td><td>R$ ${total.toFixed(2)}</td></b></tr></table><br><br><center>__________________________<br>Assinatura</center></div></div>`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
     };
@@ -285,7 +295,7 @@
     setInterval(() => {
         const d = new Date();
         document.getElementById('txt-time').innerText = d.toLocaleTimeString('pt-BR');
-        document.getElementById('txt-date').innerText = d.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long'});
+        document.getElementById('txt-date').innerText = d.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric'});
     }, 1000);
 
     init();
