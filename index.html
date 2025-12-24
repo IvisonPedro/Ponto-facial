@@ -3,78 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radar Ponto - Sistema Biométrico</title>
+    <title>Radar Ponto - Biometria Facial</title>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
         :root { --primary: #003366; --success: #16a34a; --bg: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; box-sizing: border-box; }
         .card { background: white; width: 100%; max-width: 700px; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
-        .logo-text { font-size: 24px; font-weight: 900; color: var(--primary); border: 3px solid var(--primary); padding: 10px; border-radius: 8px; margin-bottom: 15px; min-height: 50px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .logo-text { font-size: 24px; font-weight: 900; color: var(--primary); border: 3px solid var(--primary); padding: 10px; border-radius: 8px; margin-bottom: 15px; min-height: 50px; display: flex; align-items: center; justify-content: center; }
         .logo-text img { max-height: 60px; max-width: 100%; object-fit: contain; }
         .time { font-size: 2.8rem; font-weight: 800; font-family: monospace; color: #1e293b; margin: 10px 0; }
         #video-container { width: 100%; border-radius: 15px; overflow: hidden; margin: 15px 0; background: #000; position: relative; }
         video { width: 100%; display: block; transform: scaleX(-1); }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-        button { padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.3s; }
+        button { padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .hidden { display: none !important; }
-        
-        /* Estilos de Relatório */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; background: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: center; }
         th { background: #f1f5f9; }
-        .batida-tag { display: inline-block; padding: 4px 10px; border-radius: 6px; margin: 2px; font-weight: bold; cursor: pointer; border: 1px solid transparent; }
-        .tag-entrada { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-        .tag-saida { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
-        .alerta-ponto { color: #ea580c; font-size: 11px; display: block; margin-top: 5px; font-weight: bold; }
+        .batida-tag { display: inline-block; padding: 4px 10px; border-radius: 6px; margin: 2px; font-weight: bold; cursor: pointer; }
+        .tag-entrada { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .tag-saida { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .alerta-ponto { color: #ea580c; font-size: 11px; display: block; font-weight: bold; }
 
         @media print { 
             .no-print { display: none !important; } 
-            body { background: white; }
             .container { display: block; padding: 0; }
-            .card { box-shadow: none; max-width: 100%; border: none; }
             .page-break { page-break-after: always; border: 1px solid #000; padding: 30px; margin-bottom: 20px; }
         }
     </style>
 </head>
 <body>
 
-<div class="container" id="screen-login">
-    <div class="card">
+<div class="container" id="screen-main">
+    <div class="card" id="content-card">
         <div id="display-logo" class="logo-text">CARREGANDO...</div>
         <div class="time" id="txt-time">00:00:00</div>
         <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
-        <div id="status-msg">Iniciando câmera...</div>
+        <div id="status-msg">Iniciando sistema...</div>
         <button class="btn-primary" id="btn-ponto" onclick="iniciarLeitura(false)">REGISTRAR MEU PONTO</button>
-        <button style="background:none; color:gray; font-size:12px; text-decoration:underline;" onclick="verificarAcessoAdm()">Painel Administrativo</button>
+        <button style="background:none; color:gray; font-size:12px; text-decoration:underline; border:none;" onclick="acessoPainelAdm()">Painel Administrativo</button>
     </div>
 </div>
 
 <div class="container hidden" id="screen-adm">
     <div class="card" style="max-width: 900px; text-align: left;">
-        <div class="no-print" style="display: flex; justify-content: space-between; align-items: center;">
-            <button class="btn-primary" style="width: auto;" onclick="location.reload()">⬅ Sair</button>
-            <h2 id="adm-title" style="margin: 0;">Painel de Gestão</h2>
-        </div>
-
-        <div class="no-print" style="background: #f1f5f9; padding: 20px; border-radius: 12px; margin: 20px 0;">
-            <p style="margin-top:0;"><b>Relatórios e Fechamento:</b></p>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <input type="month" id="filtro-mes" style="flex: 1; min-width: 150px;">
-                <button class="btn-success" style="width: auto; flex: 1;" onclick="gerarRelatorio()">📊 VER PONTOS</button>
-                <button class="btn-primary" style="width: auto; flex: 1; background: #6366f1;" onclick="gerarFechamentoIndividual()">📄 FECHAMENTO INDIVIDUAL</button>
+        <button class="btn-primary no-print" style="width: auto;" onclick="location.reload()">⬅ Sair</button>
+        <h2 id="adm-title">Gestão</h2>
+        <div class="no-print" style="background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+            <input type="month" id="filtro-mes">
+            <div style="display:flex; gap:10px;">
+                <button class="btn-success" onclick="gerarRelatorio()">📊 VER PONTOS</button>
+                <button class="btn-primary" style="background:#6366f1;" onclick="gerarFechamento()">📄 FECHAMENTO INDIVIDUAL</button>
             </div>
-            <button class="btn-primary hidden" id="btn-print" onclick="window.print()" style="margin-top: 15px;">🖨️ IMPRIMIR / SALVAR PDF</button>
+            <button class="btn-primary hidden" id="btn-print" onclick="window.print()">🖨️ GERAR PDF</button>
         </div>
-
         <div id="relatorios-box"></div>
         <hr class="no-print">
-        <div class="no-print">
-            <button class="btn-success" onclick="modoCadastro()">+ CADASTRAR NOVO COLABORADOR</button>
-            <div id="lista-equipe" style="margin-top: 20px;"></div>
-        </div>
+        <button class="btn-success no-print" onclick="modoCadastro()">+ NOVO COLABORADOR</button>
+        <div id="lista-equipe" class="no-print"></div>
     </div>
 </div>
 
@@ -93,23 +82,19 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
-    
     let empresaID = new URLSearchParams(window.location.search).get('id') || "radar";
     let configEmpresa = null;
     let faceMatcher = null;
 
-    // INICIALIZAÇÃO
     async function init() {
+        if (empresaID === "admin-mestre") return iniciarPainelMestre();
         const snap = await getDoc(doc(db, "configuracoes_mestre", empresaID));
         if (snap.exists()) {
             configEmpresa = snap.data();
             document.documentElement.style.setProperty('--primary', configEmpresa.cor);
-            const logoBox = document.getElementById('display-logo');
-            logoBox.innerHTML = configEmpresa.logo ? `<img src="${configEmpresa.logo}">` : configEmpresa.nome;
-            document.getElementById('adm-title').innerText = "Gestão: " + configEmpresa.nome;
+            document.getElementById('display-logo').innerHTML = configEmpresa.logo ? `<img src="${configEmpresa.logo}">` : configEmpresa.nome;
+            document.getElementById('adm-title').innerText = configEmpresa.nome;
             carregarIA();
-        } else if (empresaID === "admin-mestre") { 
-            iniciarPainelMestre(); // Função interna de revenda
         }
     }
 
@@ -118,7 +103,6 @@
         await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
         document.getElementById('status-msg').innerText = "Câmera Ativa";
-        
         onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
             const desc = [];
             s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
@@ -126,144 +110,115 @@
         });
     }
 
-    // PONTO E BIOMETRIA
-    window.iniciarLeitura = async (isCadastro) => {
+    window.iniciarLeitura = async (isCad) => {
         const video = document.getElementById('video');
         const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
         video.srcObject = stream;
-        document.getElementById('status-msg').innerText = "Processando Rosto...";
-
         const check = setInterval(async () => {
-            const detect = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-            if (detect) {
-                clearInterval(check);
-                stream.getTracks().forEach(t => t.stop());
-                if (isCadastro) {
-                    const nome = prompt("Nome completo do funcionário:");
-                    if (nome) {
-                        await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { descriptor: Array.from(detect.descriptor) });
-                        alert("Cadastro realizado!");
-                    }
+            const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+            if (det) {
+                clearInterval(check); stream.getTracks().forEach(t => t.stop());
+                if (isCad) {
+                    const n = prompt("Nome do Funcionário:");
+                    if (n) await setDoc(doc(db, `empresas/${empresaID}/biometria`, n), { descriptor: Array.from(det.descriptor) });
                     location.reload();
                 } else {
-                    const match = faceMatcher?.findBestMatch(detect.descriptor);
-                    if (match && match.label !== 'unknown') {
-                        await addDoc(collection(db, `empresas/${empresaID}/pontos`), { 
-                            nome: match.label, data: new Date().toLocaleDateString('pt-BR'), 
-                            hora: new Date().toLocaleTimeString('pt-BR').substring(0,5), timestamp: Date.now() 
-                        });
-                        alert("Ponto batido: " + match.label);
-                    } else alert("Rosto não identificado.");
+                    const m = faceMatcher?.findBestMatch(det.descriptor);
+                    if (m && m.label !== 'unknown') {
+                        await addDoc(collection(db, `empresas/${empresaID}/pontos`), { nome: m.label, data: new Date().toLocaleDateString('pt-BR'), hora: new Date().toLocaleTimeString('pt-BR').substring(0,5), timestamp: Date.now() });
+                        alert("Ponto: " + m.label);
+                    } else alert("Não reconhecido.");
                     location.reload();
                 }
             }
         }, 800);
     };
 
-    // FUNÇÕES ADMINISTRATIVAS E CÁLCULOS
-    const calcDiff = (h1, h2) => {
-        const [aH, aM] = h1.split(':').map(Number);
-        const [bH, bM] = h2.split(':').map(Number);
-        return ((bH * 60 + bM) - (aH * 60 + aM)) || 0;
+    const calcMin = (h1, h2) => {
+        const [aH, aM] = h1.split(':').map(Number); const [bH, bM] = h2.split(':').map(Number);
+        return (bH * 60 + bM) - (aH * 60 + aM);
     };
 
-    window.verificarAcessoAdm = () => {
-        const p = prompt("Senha Administrativa:");
-        if(p === configEmpresa?.senha) {
-            document.getElementById('screen-login').classList.add('hidden');
-            document.getElementById('screen-adm').classList.remove('hidden');
-            atualizarListaEquipe();
-        }
-    };
+    window.acessoPainelAdm = () => { if(prompt("Senha:") === configEmpresa?.senha) { document.getElementById('screen-main').classList.add('hidden'); document.getElementById('screen-adm').classList.remove('hidden'); listarEquipe(); } };
 
-    async function atualizarListaEquipe() {
+    async function listarEquipe() {
         const snap = await getDocs(collection(db, `empresas/${empresaID}/biometria`));
-        let h = '<b>Funcionários Ativos:</b><br>';
-        snap.forEach(d => h += `<div class="batida-tag">${d.id} <span onclick="window.delFunc('${d.id}')">❌</span></div>`);
+        let h = '<b>Equipe:</b><br>';
+        snap.forEach(d => h += `<span class="batida-tag">${d.id} <small onclick="window.delF('${d.id}')">❌</small></span>`);
         document.getElementById('lista-equipe').innerHTML = h;
     }
-
-    window.delFunc = async (id) => { if(confirm("Remover "+id+"?")) { await deleteDoc(doc(db, `empresas/${empresaID}/biometria`, id)); atualizarListaEquipe(); }};
+    window.delF = async (id) => { if(confirm("Excluir?")) { await deleteDoc(doc(db, `empresas/${empresaID}/biometria`, id)); listarEquipe(); }};
 
     window.gerarRelatorio = async () => {
-        const mes = document.getElementById('filtro-mes').value;
-        if(!mes) return alert("Selecione o mês");
-        const [ano, mesNum] = mes.split('-');
-        const snap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
-        const pontos = [];
-        snap.forEach(d => { if(d.data().data.includes(`/${mesNum}/${ano}`)) pontos.push({id: d.id, ...d.data()}); });
-
-        let html = `<h2>Folha de Ponto - ${mesNum}/${ano}</h2>`;
-        const nomes = [...new Set(pontos.map(p => p.nome))];
-
-        nomes.forEach(n => {
-            let total = 0;
-            let rows = '';
-            const pUser = pontos.filter(p => p.nome === n);
-            const dias = [...new Set(pUser.map(p => p.data))].sort((a,b) => a.localeCompare(b));
-
-            dias.forEach(d => {
-                const bats = pUser.filter(p => p.data === d).sort((a,b) => a.hora.localeCompare(b.hora));
-                let dMin = 0;
-                const tags = bats.map((b, i) => {
-                    if (i % 2 !== 0) dMin += calcDiff(bats[i-1].hora, b.hora);
-                    return `<span class="batida-tag ${i%2===0?'tag-entrada':'tag-saida'}" onclick="window.editPt('${b.id}','${b.hora}')">${b.hora}</span>`;
-                }).join(' ');
-                total += dMin;
-                rows += `<tr><td>${d}</td><td>${tags}${bats.length%2!==0?'<br><small class="alerta-ponto">Saída pendente</small>':''}</td><td>${Math.floor(dMin/60)}h ${dMin%60}m</td></tr>`;
-            });
-            html += `<h4>${n}</h4><table><tr><th>Data</th><th>Batidas</th><th>Total</th></tr>${rows}<tr><td colspan="2"><b>SOMA MENSAL</b></td><td><b>${Math.floor(total/60)}h ${total%60}m</b></td></tr></table><br>`;
-        });
-        document.getElementById('relatorios-box').innerHTML = html || "Sem dados.";
-        document.getElementById('btn-print').classList.remove('hidden');
-    };
-
-    window.gerarFechamentoIndividual = async () => {
-        const mes = document.getElementById('filtro-mes').value;
-        if(!mes) return alert("Selecione o mês");
+        const mes = document.getElementById('filtro-mes').value; if(!mes) return;
         const [ano, mNum] = mes.split('-');
         const snap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
-        const pontos = [];
-        snap.forEach(d => { if(d.data().data.includes(`/${mNum}/${ano}`)) pontos.push(d.data()); });
-
-        let html = "";
-        const nomes = [...new Set(pontos.map(p => p.nome))];
-        nomes.forEach(n => {
-            let tMin = 0;
-            const pUser = pontos.filter(p => p.nome === n);
-            const dias = [...new Set(pUser.map(p => p.data))].sort();
-            let dRows = "";
-            dias.forEach(d => {
-                const bats = pUser.filter(p => p.data === d).map(b => b.hora).sort();
-                let diaM = 0;
-                for(let i=0; i<bats.length-1; i+=2) diaM += calcDiff(bats[i], bats[i+1]);
-                tMin += diaM;
-                dRows += `<tr><td>${d}</td><td>${bats.join(' | ')}</td><td>${Math.floor(diaM/60)}h ${diaM%60}m</td></tr>`;
+        const pts = []; snap.forEach(d => { if(d.data().data.includes(`/${mNum}/${ano}`)) pts.push({id: d.id, ...d.data()}); });
+        
+        let h = `<h2>Pontos - ${mNum}/${ano}</h2>`;
+        [...new Set(pts.map(p => p.nome))].forEach(n => {
+            let t = 0; let r = '';
+            const uPts = pts.filter(p => p.nome === n);
+            [...new Set(uPts.map(p => p.data))].sort().forEach(d => {
+                const b = uPts.filter(p => p.data === d).sort((x,y) => x.hora.localeCompare(y.hora));
+                let dM = 0;
+                const tags = b.map((p, i) => {
+                    if (i % 2 !== 0) dM += calcMin(b[i-1].hora, p.hora);
+                    return `<span class="batida-tag ${i%2===0?'tag-entrada':'tag-saida'}" onclick="window.edP('${p.id}','${p.hora}')">${p.hora}</span>`;
+                }).join(' ');
+                t += dM;
+                r += `<tr><td>${d}</td><td>${tags}${b.length%2!==0?'<small class="alerta-ponto">Aberto</small>':''}</td><td>${Math.floor(dM/60)}h ${dM%60}m</td></tr>`;
             });
-
-            html += `<div class="page-break">
-                <h3>ESPELHO DE PONTO - ${configEmpresa.nome}</h3>
-                <p><b>FUNCIONÁRIO:</b> ${n} | <b>MÊS:</b> ${mNum}/${ano}</p>
-                <table><tr><th>Data</th><th>Registros</th><th>Total</th></tr>${dRows}
-                <tr style="background:#eee"><td colspan="2" align="right"><b>TOTAL GERAL</b></td><td><b>${Math.floor(tMin/60)}h ${tMin%60}m</b></td></tr></table>
-                <div style="margin-top:60px; display:flex; justify-content:space-around;">
-                    <div style="border-top:1px solid #000; width:200px">Empresa</div><div style="border-top:1px solid #000; width:200px">Colaborador</div>
-                </div>
-            </div>`;
+            h += `<h4>${n}</h4><table><tr><th>Data</th><th>Batidas</th><th>Total</th></tr>${r}<tr><td colspan="2"><b>MÊS</b></td><td><b>${Math.floor(t/60)}h ${t%60}m</b></td></tr></table><br>`;
         });
-        document.getElementById('relatorios-box').innerHTML = html;
-        document.getElementById('btn-print').classList.remove('hidden');
+        document.getElementById('relatorios-box').innerHTML = h; document.getElementById('btn-print').classList.remove('hidden');
     };
 
-    window.editPt = async (id, h) => {
-        const n = prompt("Novo horário (HH:MM) ou vazio para excluir:", h);
+    window.gerarFechamento = async () => {
+        const mes = document.getElementById('filtro-mes').value; if(!mes) return;
+        const [ano, mNum] = mes.split('-');
+        const snap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
+        const pts = []; snap.forEach(d => { if(d.data().data.includes(`/${mNum}/${ano}`)) pts.push(d.data()); });
+
+        let h = "";
+        [...new Set(pts.map(p => p.nome))].forEach(n => {
+            let t = 0; const uP = pts.filter(p => p.nome === n);
+            let dR = "";
+            [...new Set(uP.map(p => p.data))].sort().forEach(d => {
+                const b = uP.filter(p => p.data === d).map(x => x.hora).sort();
+                let dM = 0; for(let i=0; i<b.length-1; i+=2) dM += calcMin(b[i], b[i+1]);
+                t += dM; dR += `<tr><td>${d}</td><td>${b.join(' | ')}</td><td>${Math.floor(dM/60)}h ${dM%60}m</td></tr>`;
+            });
+            h += `<div class="page-break"><h3>${configEmpresa.nome}</h3><p><b>COLABORADOR:</b> ${n} | <b>MÊS:</b> ${mNum}/${ano}</p><table><tr><th>Data</th><th>Registros</th><th>Total</th></tr>${dR}<tr><td colspan="2"><b>TOTAL GERAL</b></td><td><b>${Math.floor(t/60)}h ${t%60}m</b></td></tr></table><div style="margin-top:50px; display:flex; justify-content:space-around;"><div style="border-top:1px solid #000; width:180px">Empresa</div><div style="border-top:1px solid #000; width:180px">Colaborador</div></div></div>`;
+        });
+        document.getElementById('relatorios-box').innerHTML = h; document.getElementById('btn-print').classList.remove('hidden');
+    };
+
+    window.edP = async (id, h) => {
+        const n = prompt("Novo (HH:MM) ou vazio para excluir:", h);
         if(n === "") await deleteDoc(doc(db, `empresas/${empresaID}/pontos`, id));
         else if(n) await updateDoc(doc(db, `empresas/${empresaID}/pontos`, id), { hora: n });
         gerarRelatorio();
     };
 
-    window.modoCadastro = () => { document.getElementById('screen-adm').classList.add('hidden'); document.getElementById('screen-login').classList.remove('hidden'); document.getElementById('btn-ponto').innerText = "CAPTURAR ROSTO"; document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true); };
+    async function iniciarPainelMestre() {
+        document.getElementById('content-card').innerHTML = `
+            <h2>🛡️ Revenda</h2><input id="m-id" placeholder="ID Link (ex: loja1)"><input id="m-nome" placeholder="Nome"><input id="m-senha" placeholder="Senha Adm"><input type="color" id="m-cor" value="#003366"><input id="m-logo" placeholder="URL Logo"><button class="btn-success" onclick="window.addM()">SALVAR CLIENTE</button><hr><div id="m-lista"></div>`;
+        listarM();
+    }
+    window.addM = async () => {
+        const id = document.getElementById('m-id').value;
+        const d = { nome: document.getElementById('m-nome').value, senha: document.getElementById('m-senha').value, cor: document.getElementById('m-cor').value, logo: document.getElementById('m-logo').value };
+        await setDoc(doc(db, "configuracoes_mestre", id), d); location.reload();
+    };
+    async function listarM() {
+        const s = await getDocs(collection(db, "configuracoes_mestre"));
+        let h = ""; s.forEach(d => h += `<div>${d.id} - ${d.data().nome} <button onclick="window.delM('${d.id}')">X</button></div>`);
+        document.getElementById('m-lista').innerHTML = h;
+    }
+    window.delM = async (id) => { if(confirm("Excluir empresa?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); listarM(); }};
 
+    window.modoCadastro = () => { document.getElementById('screen-adm').classList.add('hidden'); document.getElementById('screen-main').classList.remove('hidden'); document.getElementById('btn-ponto').innerText = "CAPTURAR ROSTO"; document.getElementById('btn-ponto').onclick = () => iniciarLeitura(true); };
     setInterval(() => { document.getElementById('txt-time').innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
     init();
 </script>
