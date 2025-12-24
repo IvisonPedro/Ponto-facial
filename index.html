@@ -21,16 +21,17 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-red { background: #dc2626; color: white; }
-        .btn-small { padding: 5px 10px; font-size: 12px; width: auto; margin: 0 2px; border-radius: 5px; }
+        .btn-small { padding: 8px; font-size: 12px; width: auto; margin: 5px; border-radius: 8px; }
         .hidden { display: none !important; }
         @media print { .no-print { display: none !important; } .page-break { page-break-after: always; border: 1px solid #000; padding: 20px; margin-bottom: 20px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; } }
     </style>
 </head>
 <body>
 
-<div id="lock-screen" class="hidden" style="background: #003366; position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+<div id="lock-screen" style="background: #003366; position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
     <div class="card" style="max-width: 350px;">
         <h3>🛡️ Radar Revenda</h3>
+        <p>Insira a senha mestra ou ID da empresa na URL</p>
         <input type="password" id="master-pass" placeholder="Senha Mestra" style="text-align: center;">
         <button class="btn-primary" onclick="acessarRevenda()">ENTRAR NO PAINEL</button>
     </div>
@@ -59,7 +60,7 @@
             <div id="txt-date" style="font-size: 14px; opacity: 0.8;">...</div>
         </div>
         <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
-        <p id="status-msg">Iniciando...</p>
+        <p id="status-msg">Carregando...</p>
         <button class="btn-red" id="btn-main" onclick="processarAcao()">REGISTRAR PONTO</button>
         <a href="javascript:void(0)" onclick="abrirPainelEmpresa()" style="display:block; margin-top:15px; color:gray; font-size:13px;">Acesso Administrativo</a>
     </div>
@@ -67,17 +68,19 @@
 
 <div id="screen-adm" class="container hidden">
     <div class="card" style="max-width: 850px; text-align: left;">
-        <button class="btn-red" style="width:auto; padding:10px;" onclick="location.reload()">⬅ VOLTAR</button>
+        <button class="btn-red" style="width:auto; padding:10px;" onclick="voltarAoTotem()">⬅ VOLTAR</button>
         <h3 id="adm-titulo">Painel Administrativo</h3>
+        
         <div class="no-print" style="background:#f1f5f9; padding:15px; border-radius:15px; margin-bottom:15px;">
             <input type="month" id="filtro-mes">
-            <div style="display:flex; gap:5px;">
-                <button class="btn-primary" onclick="gerarRelatorio()" style="font-size:14px;">📊 PONTO</button>
-                <button class="btn-success" onclick="gerarHolerite()" style="font-size:14px; background:#059669;">💰 HOLERITE</button>
-                <button class="btn-primary" onclick="window.print()" style="font-size:14px; background:#6366f1;">🖨️ PDF</button>
+            <div style="display:flex; gap:5px; flex-wrap: wrap;">
+                <button class="btn-primary" onclick="gerarRelatorio()" style="flex:1;">📊 VER PONTOS</button>
+                <button class="btn-success" onclick="gerarHolerite()" style="flex:1; background:#059669;">💰 HOLERITES</button>
+                <button class="btn-primary" onclick="window.print()" style="flex:1; background:#6366f1;">🖨️ PDF</button>
             </div>
         </div>
-        <button class="btn-success no-print" onclick="entrarModoCadastro()">+ NOVO FUNCIONÁRIO</button>
+        
+        <button class="btn-success no-print" onclick="entrarModoCadastro()">+ CADASTRAR NOVO FUNCIONÁRIO</button>
         <div id="box-relatorio" style="margin-top:20px;"></div>
     </div>
 </div>
@@ -105,11 +108,7 @@
     let modoCadastro = false;
 
     async function init() {
-        if (!empresaID) {
-            document.getElementById('lock-screen').style.display = 'flex';
-            document.getElementById('lock-screen').classList.remove('hidden');
-            return;
-        }
+        if (!empresaID) return; // Fica na tela de bloqueio se não houver ID
 
         try {
             const snap = await getDoc(doc(db, "configuracoes_mestre", empresaID));
@@ -119,13 +118,14 @@
                 document.getElementById('screen-totem').classList.remove('hidden');
                 document.documentElement.style.setProperty('--primary', configEmpresa.cor);
                 document.getElementById('display-logo').innerHTML = configEmpresa.logo ? `<img src="${configEmpresa.logo}">` : `<h2>${configEmpresa.nome}</h2>`;
-                document.getElementById('adm-titulo').innerText = "Painel: " + configEmpresa.nome;
+                document.getElementById('adm-titulo').innerText = "Gestão: " + configEmpresa.nome;
                 ligarCamera();
             } else {
-                alert("Empresa não encontrada.");
-                window.location.href = window.location.origin + window.location.pathname;
+                alert("ID da empresa não encontrado.");
             }
-        } catch (e) { alert("Erro de conexão."); }
+        } catch (e) {
+            console.error("Erro Firebase:", e);
+        }
     }
 
     window.acessarRevenda = () => {
@@ -145,15 +145,15 @@
             cor: document.getElementById('m-cor').value, 
             logo: document.getElementById('m-logo').value 
         });
-        alert("Salvo!"); listarClientes();
+        alert("Empresa Salva!"); listarClientes();
     };
 
     async function listarClientes() {
         const s = await getDocs(collection(db, "configuracoes_mestre"));
-        let h = "<h4>Empresas Ativas:</h4>"; 
+        let h = "<h4>Empresas:</h4>"; 
         s.forEach(d => h += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
             <span><b>${d.id}</b></span>
-            <button class="btn-red btn-small" onclick="window.delC('${d.id}')">EXCLUIR</button>
+            <button class="btn-red btn-small" onclick="window.delC('${d.id}')">X</button>
         </div>`);
         document.getElementById('lista-clientes').innerHTML = h;
     }
@@ -166,7 +166,7 @@
         await faceapi.nets.faceRecognitionNet.loadFromUri(weights);
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         document.getElementById('video').srcObject = stream;
-        document.getElementById('status-msg').innerText = "IA Pronta";
+        document.getElementById('status-msg').innerText = "Câmera On";
 
         onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
             const desc = []; s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
@@ -180,18 +180,24 @@
 
         if(modoCadastro) {
             const nome = prompt("Nome do Funcionário:");
-            const vh = prompt("Valor da Hora (Ex: 25.00):");
+            const vh = prompt("Valor da Hora (Ex: 20.00):");
             if(nome && vh) {
-                await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { descriptor: Array.from(det.descriptor), valorHora: parseFloat(vh) });
-                alert("Cadastrado!"); location.reload();
+                await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { 
+                    descriptor: Array.from(det.descriptor), valorHora: parseFloat(vh) 
+                });
+                alert("Funcionário Cadastrado!"); 
+                voltarAoTotem();
             }
         } else {
             const m = faceMatcher?.findBestMatch(det.descriptor);
             if(m && m.label !== 'unknown') {
-                const agora = new Date(); const hora = agora.toLocaleTimeString('pt-BR').substring(0,5);
-                await addDoc(collection(db, `empresas/${empresaID}/pontos`), { nome: m.label, data: agora.toLocaleDateString('pt-BR'), hora: hora, timestamp: Date.now() });
-                alert("PONTO: " + m.label + " às " + hora);
-            } else alert("Rosto não reconhecido.");
+                const agora = new Date();
+                const hora = agora.toLocaleTimeString('pt-BR').substring(0,5);
+                await addDoc(collection(db, `empresas/${empresaID}/pontos`), { 
+                    nome: m.label, data: agora.toLocaleDateString('pt-BR'), hora: hora, timestamp: Date.now() 
+                });
+                alert("REGISTRADO: " + m.label + " às " + hora);
+            } else alert("Não reconhecido.");
         }
     };
 
@@ -202,34 +208,40 @@
         }
     };
 
+    window.voltarAoTotem = () => {
+        modoCadastro = false;
+        document.getElementById('btn-main').innerText = "REGISTRAR PONTO";
+        document.getElementById('screen-adm').classList.add('hidden');
+        document.getElementById('screen-totem').classList.remove('hidden');
+    };
+
     window.entrarModoCadastro = () => {
         modoCadastro = true;
         document.getElementById('screen-adm').classList.add('hidden');
         document.getElementById('screen-totem').classList.remove('hidden');
         document.getElementById('btn-main').innerText = "CAPTURAR ROSTO";
+        alert("Aponte a câmera para o funcionário e clique em CAPTURAR ROSTO");
     };
 
-    // --- NOVAS FUNÇÕES: EXCLUIR E EDITAR ---
+    // --- FUNÇÕES DE GESTÃO ---
     window.excluirFuncionario = async (nome) => {
-        if(confirm(`Tem certeza que deseja excluir o funcionário ${nome}? Isso removerá a biometria.`)) {
+        if(confirm(`Excluir permanentemente ${nome}?`)) {
             await deleteDoc(doc(db, `empresas/${empresaID}/biometria`, nome));
-            alert("Funcionário removido!");
-            gerarRelatorio(); // Atualiza a tela
+            alert("Excluído!"); gerarRelatorio();
         }
     };
 
     window.editarValorHora = async (nome, valorAtual) => {
-        const novoValor = prompt(`Novo valor da hora para ${nome}:`, valorAtual);
-        if(novoValor && !isNaN(novoValor)) {
-            await updateDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { valorHora: parseFloat(novoValor) });
-            alert("Valor atualizado!");
-            gerarHolerite(); // Atualiza a tela
+        const novo = prompt(`Novo valor hora para ${nome}:`, valorAtual);
+        if(novo) {
+            await updateDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { valorHora: parseFloat(novo) });
+            alert("Atualizado!"); gerarHolerite();
         }
     };
 
     async function carregarDados() {
         const mesSel = document.getElementById('filtro-mes').value;
-        if(!mesSel) return alert("Selecione o mês!");
+        if(!mesSel) return alert("Selecione o mês");
         const [ano, mes] = mesSel.split('-');
         const ptsSnap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
         const funcSnap = await getDocs(collection(db, `empresas/${empresaID}/biometria`));
@@ -239,8 +251,7 @@
 
     window.gerarRelatorio = async () => {
         const d = await carregarDados(); if(!d) return;
-        let h = ""; 
-        // Lista todos os funcionários da biometria para garantir que apareçam mesmo sem pontos
+        let h = "";
         d.funcionarios.forEach(fDoc => {
             const n = fDoc.id;
             let totalMins = 0; let rows = "";
@@ -256,13 +267,11 @@
                 rows += `<tr><td>${dt}</td><td>${batidas.map(b=>b.hora).join(' | ')}</td><td>${Math.floor(totalMins/60)}h ${totalMins%60}m</td></tr>`;
             });
             h += `<div class="page-break">
-                <div class="no-print" style="float:right;">
-                    <button class="btn-red btn-small" onclick="excluirFuncionario('${n}')">🗑️ EXCLUIR FUNCIONÁRIO</button>
-                </div>
-                <center><h2>${configEmpresa.nome}</h2><p>PONTO: ${d.mes}/${d.ano}</p></center>
-                <p><b>FUNC:</b> ${n.toUpperCase()}</p>
-                <table><tr><th>DATA</th><th>REGISTROS</th><th>ACUMULADO</th></tr>${rows}</table>
-            </div>`;
+                <button class="btn-red btn-small no-print" onclick="excluirFuncionario('${n}')">🗑️ EXCLUIR FUNCIONÁRIO</button>
+                <center><h3>${configEmpresa.nome} - PONTO</h3></center>
+                <p><b>FUNCIONÁRIO:</b> ${n.toUpperCase()}</p>
+                <table border="1"><tr><th>DATA</th><th>BATIDAS</th><th>TOTAL</th></tr>${rows}</table>
+            </div><hr class="no-print">`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
     };
@@ -271,9 +280,9 @@
         const d = await carregarDados(); if(!d) return;
         let h = "";
         d.funcionarios.forEach(fDoc => {
-            const f = fDoc.data(); const nome = fDoc.id; const vh = f.valorHora || 0;
+            const f = fDoc.data(); const vh = f.valorHora || 0;
             let totalMins = 0;
-            const meusPts = d.pontos.filter(p => p.nome === nome);
+            const meusPts = d.pontos.filter(p => p.nome === fDoc.id);
             const datas = [...new Set(meusPts.map(p => p.data))].sort();
             datas.forEach(dt => {
                 const batidas = meusPts.filter(p => p.data === dt).sort((a,b) => a.hora.localeCompare(b.hora));
@@ -285,19 +294,18 @@
             });
             const hDec = totalMins/60; const total = hDec * vh;
             h += `<div class="page-break">
-                <div class="no-print" style="float:right;">
-                    <button class="btn-primary btn-small" onclick="editarValorHora('${nome}', ${vh})">✏️ EDITAR VALOR HORA</button>
-                </div>
+                <button class="btn-primary btn-small no-print" onclick="editarValorHora('${fDoc.id}', ${vh})">✏️ EDITAR VALOR HORA</button>
                 <div style="border:2px solid #000; padding:20px;">
-                    <center><h2>${configEmpresa.nome}</h2><p>RECIBO SALARIAL - ${d.mes}/${d.ano}</p></center>
-                    <p><b>NOME:</b> ${nome.toUpperCase()}</p>
-                    <table><tr><th>DESCRIÇÃO</th><th>REF</th><th>VALOR</th></tr>
-                    <tr><td>Horas Trabalhadas</td><td>${hDec.toFixed(2)}h</td><td>R$ ${total.toFixed(2)}</td></tr>
-                    <tr><td>Valor da Hora</td><td>R$ ${vh.toFixed(2)}</td><td>-</td></tr>
-                    <tr style="font-size:18px;"><b><td colspan="2" align="right">LÍQUIDO:</td><td>R$ ${total.toFixed(2)}</td></b></tr></table>
-                    <br><br><center>__________________________<br>Assinatura</center>
+                    <center><h2>RECIBO DE PAGAMENTO</h2></center>
+                    <p><b>EMPRESA:</b> ${configEmpresa.nome}</p>
+                    <p><b>COLABORADOR:</b> ${fDoc.id.toUpperCase()}</p>
+                    <table width="100%" border="1">
+                        <tr><td>Horas Totais</td><td>${hDec.toFixed(2)}h</td></tr>
+                        <tr><td>Valor Hora</td><td>R$ ${vh.toFixed(2)}</td></tr>
+                        <tr style="background:#eee"><td><b>TOTAL LÍQUIDO</b></td><td><b>R$ ${total.toFixed(2)}</b></td></tr>
+                    </table>
                 </div>
-            </div>`;
+            </div><br>`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
     };
