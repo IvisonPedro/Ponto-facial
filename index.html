@@ -3,185 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Radar Ponto - Biometria e Holerite</title>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
         :root { --primary: #003366; --success: #16a34a; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; box-sizing: border-box; }
         .card { background: white; width: 100%; max-width: 600px; padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
         
-        /* Elementos Visuais */
         .logo-box { border: 2px solid var(--primary); border-radius: 10px; padding: 10px; margin-bottom: 15px; min-height: 60px; display: flex; align-items: center; justify-content: center; }
-        .logo-box img { max-height: 80px; }
+        .logo-box img { max-height: 80px; max-width: 100%; }
         .clock-box { background: #1e293b; color: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
-        .time { font-size: 3.5rem; font-weight: 800; }
-        #video-container { width: 100%; border-radius: 20px; overflow: hidden; background: #000; aspect-ratio: 4/3; }
+        .time { font-size: 3.5rem; font-weight: 800; font-family: monospace; line-height: 1; }
+        #video-container { width: 100%; border-radius: 20px; overflow: hidden; background: #000; aspect-ratio: 4/3; position: relative; }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        button { padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; }
+        button { padding: 18px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; font-size: 18px; text-transform: uppercase; margin-top: 10px; }
         input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-red { background: #dc2626; color: white; }
         .hidden { display: none !important; }
 
-        /* Estilo do Holerite para Impressão */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 20px 0; }
+        .stat-card { padding: 15px; border-radius: 15px; text-align: left; border-left: 5px solid var(--primary); background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .stat-card small { font-size: 11px; color: #64748b; font-weight: bold; display: block; }
+        .stat-card div { font-size: 18px; font-weight: bold; }
+
         @media print {
-            .no-print, button, input, .logo-box, .clock-box, #video-container { display: none !important; }
-            .page-break { page-break-after: always; color: black; padding: 20px; }
-            .holerite-box { border: 2px solid #000; padding: 20px; margin-bottom: 50px; }
-            table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-            th, td { border: 1px solid #000; padding: 10px; text-align: left; }
+            .no-print, button, input, .logo-box, .clock-box, #video-container, #status-msg, a { display: none !important; }
+            body { background: white; }
+            .container { padding: 0; display: block; }
+            .card { box-shadow: none; max-width: 100%; border: none; padding: 0; }
+            .page-break { page-break-after: always; border: 1px solid #000; padding: 30px; margin-bottom: 20px; color: black; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #000; padding: 10px; text-align: center; font-size: 12px; }
+            .holerite-header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
         }
+
+        .batida-tag { display: inline-block; padding: 4px 8px; border-radius: 4px; margin: 2px; font-size: 12px; font-weight: bold; }
+        #lock-screen { background: var(--primary); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; position: fixed; z-index: 9999; top:0; left:0; }
     </style>
 </head>
 <body>
 
-<div id="lock-screen" class="hidden">...</div> <div class="container" id="screen-totem">
+<div id="lock-screen" class="hidden">
+    <div class="card" style="max-width: 350px; color: #333;">
+        <h3>🛡️ Radar Revenda</h3>
+        <input type="password" id="master-pass" placeholder="Senha Mestra" style="text-align: center;">
+        <button class="btn-primary" onclick="acessarRevenda()">ENTRAR NO PAINEL</button>
+    </div>
+</div>
+
+<div class="container hidden" id="screen-mestre">
+    <div class="card">
+        <h3>GERENCIAR CLIENTES</h3>
+        <input id="m-id" placeholder="ID da URL (ex: padaria)">
+        <input id="m-nome" placeholder="Nome da Empresa">
+        <input id="m-senha" placeholder="Senha ADM do Cliente">
+        <input type="color" id="m-cor" value="#003366" style="height:45px">
+        <input id="m-logo" placeholder="URL da Logo (PNG)">
+        <button class="btn-success" onclick="salvarCliente()">CADASTRAR EMPRESA</button>
+        <hr>
+        <div id="lista-clientes" style="text-align: left;"></div>
+    </div>
+</div>
+
+<div class="container hidden" id="screen-totem">
     <div class="card">
         <div id="display-logo" class="logo-box"></div>
-        <div class="clock-box"><div class="time" id="txt-time">00:00:00</div></div>
+        <div class="clock-box">
+            <div class="time" id="txt-time">00:00:00</div>
+            <div id="txt-date" style="font-size: 14px; opacity: 0.8;">...</div>
+        </div>
         <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
-        <button class="btn-red" onclick="processarAcao()">REGISTRAR PONTO</button>
-        <a href="javascript:void(0)" onclick="abrirPainelEmpresa()" style="display:block; margin-top:15px; color:gray;">Painel ADM</a>
+        <p id="status-msg">Câmera Pronta</p>
+        <button class="btn-red" id="btn-main" onclick="processarAcao()">REGISTRAR MEU PONTO</button>
+        <div style="margin-top: 20px;" class="no-print">
+            <a href="javascript:void(0)" onclick="abrirPainelEmpresa()" style="color:gray; font-size:13px;">Acesso Administrativo</a>
+        </div>
     </div>
 </div>
 
 <div class="container hidden" id="screen-adm">
-    <div class="card" style="max-width: 800px;">
-        <button class="btn-red" onclick="location.reload()">⬅ Voltar</button>
-        <h3>Painel Administrativo</h3>
-        <input type="month" id="filtro-mes">
-        <div style="display:flex; gap:10px;">
-            <button class="btn-primary" onclick="gerarRelatorio()">📊 Folha de Ponto</button>
-            <button class="btn-success" onclick="gerarHolerite()">💰 Gerar Holerites</button>
+    <div class="card" style="max-width: 850px; text-align: left;">
+        <div class="no-print" style="display:flex; justify-content: space-between; align-items:center; margin-bottom:15px;">
+            <button class="btn-red" style="width:auto; padding:10px 20px;" onclick="location.reload()">⬅ Voltar</button>
+            <button class="btn-success" style="width:auto; padding:10px 20px;" onclick="entrarModoCadastro()">+ Novo Funcionário</button>
         </div>
-        <button class="btn-primary" style="background:#6366f1" onclick="window.print()">🖨️ Imprimir PDF</button>
-        <hr>
-        <button class="btn-success" onclick="entrarModoCadastro()">+ Cadastrar Funcionário</button>
-        <div id="box-relatorio" style="text-align: left; margin-top:20px;"></div>
+
+        <div class="no-print" style="background:#f1f5f9; padding:15px; border-radius:15px; margin-bottom:15px;">
+            <input type="month" id="filtro-mes">
+            <div style="display:flex; gap:10px;">
+                <button class="btn-primary" onclick="gerarRelatorio()" style="flex:1;">📊 Folha de Ponto</button>
+                <button class="btn-success" onclick="gerarHolerite()" style="flex:1; background:#059669;">💰 Holerites</button>
+                <button class="btn-primary" onclick="window.print()" style="flex:1; background:#6366f1;">🖨️ Imprimir PDF</button>
+            </div>
+        </div>
+
+        <div id="box-relatorio"></div>
+        <div id="lista-nomes-adm" class="no-print" style="margin-top:20px;"></div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, deleteDoc, getDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // CONFIGURAÇÃO FIREBASE (Mantenha as suas chaves aqui)
-    const firebaseConfig = { apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8", authDomain: "radar-ponto.firebaseapp.com", projectId: "radar-ponto", storageBucket: "radar-ponto.appspot.com", appId: "1:957045066994:web:740afa605071c69e3ed46b" };
+    const firebaseConfig = {
+        apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
+        authDomain: "radar-ponto.firebaseapp.com",
+        projectId: "radar-ponto",
+        storageBucket: "radar-ponto.appspot.com",
+        appId: "1:957045066994:web:740afa605071c69e3ed46b"
+    };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const params = new URLSearchParams(window.location.search);
     const empresaID = params.get('id');
+    const SENHA_MESTRA = "9988"; 
 
     let configEmpresa = null;
+    let faceMatcher = null;
     let modoCadastro = false;
+    let travaMinuto = {};
 
     async function init() {
+        if (!empresaID) { document.getElementById('lock-screen').classList.remove('hidden'); return; }
         const snap = await getDoc(doc(db, "configuracoes_mestre", empresaID));
         if (snap.exists()) {
             configEmpresa = snap.data();
-            document.getElementById('display-logo').innerHTML = `<h2>${configEmpresa.nome}</h2>`;
+            document.documentElement.style.setProperty('--primary', configEmpresa.cor);
+            document.getElementById('display-logo').innerHTML = configEmpresa.logo ? `<img src="${configEmpresa.logo}">` : `<h2>${configEmpresa.nome}</h2>`;
+            document.getElementById('screen-totem').classList.remove('hidden');
             ligarCamera();
         }
     }
 
-    // --- CADASTRO COM SALÁRIO ---
+    // --- REVENDA ---
+    window.acessarRevenda = () => {
+        if(document.getElementById('master-pass').value === SENHA_MESTRA) {
+            document.getElementById('lock-screen').classList.add('hidden');
+            document.getElementById('screen-mestre').classList.remove('hidden');
+            listarClientes();
+        } else alert("Senha incorreta");
+    };
+
+    window.salvarCliente = async () => {
+        const id = document.getElementById('m-id').value.toLowerCase().trim();
+        await setDoc(doc(db, "configuracoes_mestre", id), { 
+            nome: document.getElementById('m-nome').value, 
+            senha: document.getElementById('m-senha').value, 
+            cor: document.getElementById('m-cor').value, 
+            logo: document.getElementById('m-logo').value 
+        });
+        alert("Salvo!"); listarClientes();
+    };
+
+    async function listarClientes() {
+        const s = await getDocs(collection(db, "configuracoes_mestre"));
+        let h = ""; s.forEach(d => h += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><span>${d.id} - ${d.data().nome}</span> <button onclick="window.delC('${d.id}')" style="width:auto; padding:5px; background:red; color:white;">X</button></div>`);
+        document.getElementById('lista-clientes').innerHTML = h;
+    }
+
+    // --- TOTEM & CADASTRO ---
+    async function ligarCamera() {
+        const weights = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(weights);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(weights);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(weights);
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        document.getElementById('video').srcObject = stream;
+
+        onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
+            const desc = []; s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
+            faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.55) : null;
+        });
+    }
+
+    window.processarAcao = async () => {
+        const det = await faceapi.detectSingleFace(document.getElementById('video'), new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+        if(!det) return alert("Rosto não detectado.");
+
+        if(modoCadastro) {
+            const nome = prompt("Nome do Funcionário:");
+            const vh = prompt("Valor da Hora (Ex: 20.00):");
+            if(nome && vh) {
+                await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { 
+                    descriptor: Array.from(det.descriptor),
+                    valorHora: parseFloat(vh)
+                });
+                alert("Funcionário cadastrado!"); location.reload();
+            }
+        } else {
+            const m = faceMatcher?.findBestMatch(det.descriptor);
+            if(m && m.label !== 'unknown') {
+                const agora = new Date();
+                const hora = agora.toLocaleTimeString('pt-BR').substring(0,5);
+                if(travaMinuto[m.label] === hora) return alert("Aguarde 1 minuto para bater novamente.");
+                
+                await addDoc(collection(db, `empresas/${empresaID}/pontos`), { 
+                    nome: m.label, data: agora.toLocaleDateString('pt-BR'), hora: hora, timestamp: Date.now() 
+                });
+                travaMinuto[m.label] = hora;
+                alert("PONTO REGISTRADO: " + m.label);
+            } else alert("Não reconhecido.");
+        }
+    };
+
+    // --- RELATÓRIOS & HOLERITE ---
+    window.abrirPainelEmpresa = () => {
+        if(prompt("Senha ADM:") === configEmpresa.senha) {
+            document.getElementById('screen-totem').classList.add('hidden');
+            document.getElementById('screen-adm').classList.remove('hidden');
+        }
+    };
+
     window.entrarModoCadastro = () => {
         modoCadastro = true;
         document.getElementById('screen-adm').classList.add('hidden');
         document.getElementById('screen-totem').classList.remove('hidden');
-        alert("Aponte para a câmera e clique em capturar para cadastrar.");
+        document.getElementById('btn-main').innerText = "CAPTURAR ROSTO";
     };
 
-    window.processarAcao = async () => {
-        const video = document.getElementById('video');
-        const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-        
-        if(modoCadastro) {
-            const nome = prompt("Nome do Funcionário:");
-            const valorHora = prompt("Valor da Hora (Ex: 25.50):");
-            if(nome && valorHora) {
-                await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { 
-                    descriptor: Array.from(det.descriptor),
-                    valorHora: parseFloat(valorHora)
-                });
-                alert("Cadastrado!"); location.reload();
-            }
-        } else {
-            // Lógica de bater ponto (simplificada para o exemplo)
-            alert("Ponto registrado com sucesso!");
-        }
-    };
-
-    // --- GERADOR DE HOLERITE ---
-    window.gerarHolerite = async () => {
+    // Função auxiliar para calcular horas
+    async function calcularDadosRelatorio() {
         const mesSel = document.getElementById('filtro-mes').value;
+        if(!mesSel) { alert("Selecione o mês"); return null; }
         const [ano, mes] = mesSel.split('-');
         
-        const ptsSnap = await getDocs(collection(db, `empresas/${empresaID}/pontos`));
+        const ptsSnap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
         const funcSnap = await getDocs(collection(db, `empresas/${empresaID}/biometria`));
         
-        let todosPontos = [];
-        ptsSnap.forEach(d => { if(d.data().data.includes(`/${mes}/${ano}`)) todosPontos.push(d.data()); });
-
-        let htmlFinal = "";
+        let pontos = []; 
+        ptsSnap.forEach(d => { if(d.data().data.includes(`/${mes}/${ano}`)) pontos.push(d.data()); });
         
-        funcSnap.forEach(fDoc => {
+        return { pontos, funcionarios: funcSnap, mes, ano };
+    }
+
+    window.gerarRelatorio = async () => {
+        const dados = await calcularDadosRelatorio();
+        if(!dados) return;
+        let hFinal = "";
+        const nomes = [...new Set(dados.pontos.map(p => p.nome))].sort();
+
+        nomes.forEach(n => {
+            let totalMins = 0; let rows = "";
+            const ptsFunc = dados.pontos.filter(p => p.nome === n);
+            const dias = [...new Set(ptsFunc.map(p => p.data))].sort();
+
+            dias.forEach(d => {
+                const batidas = ptsFunc.filter(p => p.data === d).sort((a,b) => a.hora.localeCompare(b.hora));
+                for(let i=0; i<batidas.length-1; i+=2){
+                    const [h1,m1] = batidas[i].hora.split(':').map(Number);
+                    const [h2,m2] = batidas[i+1].hora.split(':').map(Number);
+                    totalMins += (h2*60+m2)-(h1*60+m1);
+                }
+                rows += `<tr><td>${d}</td><td>${batidas.map(b=>b.hora).join(' | ')}</td><td>${Math.floor(totalMins/60)}h ${totalMins%60}m</td></tr>`;
+            });
+
+            hFinal += `<div class="page-break">
+                <center><h2>${configEmpresa.nome}</h2><p>FOLHA DE PONTO: ${dados.mes}/${dados.ano}</p></center>
+                <p><b>COLABORADOR:</b> ${n.toUpperCase()}</p>
+                <table>
+                    <tr><th>DATA</th><th>BATIDAS</th><th>TOTAL ACUMULADO</th></tr>
+                    ${rows}
+                    <tr><th colspan="2" align="right">TOTAL NO MÊS:</th><th>${Math.floor(totalMins/60)}h ${totalMins%60}m</th></tr>
+                </table>
+            </div>`;
+        });
+        document.getElementById('box-relatorio').innerHTML = hFinal;
+    };
+
+    window.gerarHolerite = async () => {
+        const dados = await calcularDadosRelatorio();
+        if(!dados) return;
+        let hFinal = "";
+
+        dados.funcionarios.forEach(fDoc => {
             const f = fDoc.data();
             const nome = fDoc.id;
-            const valorHora = f.valorHora || 0;
+            const vh = f.valorHora || 0;
             
-            // Cálculo de Horas
             let totalMins = 0;
-            const meusPontos = todosPontos.filter(p => p.nome === nome).sort((a,b) => a.timestamp - b.timestamp);
-            
-            for(let i=0; i < meusPontos.length-1; i+=2) {
-                const [h1, m1] = meusPontos[i].hora.split(':').map(Number);
-                const [h2, m2] = meusPontos[i+1].hora.split(':').map(Number);
-                totalMins += (h2 * 60 + m2) - (h1 * 60 + m1);
-            }
+            const ptsFunc = dados.pontos.filter(p => p.nome === nome);
+            const dias = [...new Set(ptsFunc.map(p => p.data))].sort();
 
-            const totalHoras = totalMins / 60;
-            const totalPagar = totalHoras * valorHora;
+            dias.forEach(d => {
+                const batidas = ptsFunc.filter(p => p.data === d).sort((a,b) => a.hora.localeCompare(b.hora));
+                for(let i=0; i<batidas.length-1; i+=2){
+                    const [h1,m1] = batidas[i].hora.split(':').map(Number);
+                    const [h2,m2] = batidas[i+1].hora.split(':').map(Number);
+                    totalMins += (h2*60+m2)-(h1*60+m1);
+                }
+            });
 
-            htmlFinal += `
+            const horasDec = totalMins / 60;
+            const valorTotal = horasDec * vh;
+
+            hFinal += `
                 <div class="page-break">
-                    <div class="holerite-box">
-                        <center>
-                            <h2 style="margin:0">${configEmpresa.nome}</h2>
-                            <p>RECIBO DE PAGAMENTO DE SALÁRIO - MÊS: ${mes}/${ano}</p>
-                        </center>
-                        <hr>
-                        <p><b>FUNCIONÁRIO:</b> ${nome.toUpperCase()}</p>
-                        <table>
-                            <tr><th>Descrição</th><th>Referência</th><th>Vencimentos</th></tr>
-                            <tr>
-                                <td>Horas Trabalhadas (Biometria)</td>
-                                <td>${totalHoras.toFixed(2)} horas</td>
-                                <td>R$ ${totalPagar.toFixed(2)}</td>
-                            </tr>
-                            <tr style="font-weight:bold;">
-                                <td colspan="2" align="right">VALOR LÍQUIDO A RECEBER:</td>
-                                <td>R$ ${totalPagar.toFixed(2)}</td>
-                            </tr>
-                        </table>
-                        <p style="font-size:12px; margin-top:30px;">
-                            Declaro ter recebido a importância líquida discriminada neste recibo.
-                        </p>
+                    <div class="holerite-header">
+                        <h2 style="margin:0">${configEmpresa.nome}</h2>
+                        <p>RECIBO DE PAGAMENTO - ${dados.mes}/${dados.ano}</p>
+                    </div>
+                    <p><b>NOME DO FUNCIONÁRIO:</b> ${nome.toUpperCase()}</p>
+                    <table style="margin-top:20px;">
+                        <tr><th>DESCRIÇÃO</th><th>REFERÊNCIA</th><th>VALOR</th></tr>
+                        <tr><td>Horas Trabalhadas</td><td>${horasDec.toFixed(2)} hrs</td><td>R$ ${valorTotal.toFixed(2)}</td></tr>
+                        <tr><td>Valor da Hora</td><td>R$ ${vh.toFixed(2)}</td><td>-</td></tr>
+                        <tr style="font-weight:bold; font-size:16px;">
+                            <td colspan="2" align="right">TOTAL LÍQUIDO:</td>
+                            <td>R$ ${valorTotal.toFixed(2)}</td>
+                        </tr>
+                    </table>
+                    <div style="margin-top:60px; text-align:center;">
+                        <p>Recebi a importância líquida discriminada neste recibo.</p>
                         <br><br>
-                        <center>__________________________________________<br>Assinatura do Funcionário</center>
+                        _______________________________________________<br>
+                        Assinatura do Funcionário
                     </div>
                 </div>`;
         });
-        
-        document.getElementById('box-relatorio').innerHTML = htmlFinal;
+        document.getElementById('box-relatorio').innerHTML = hFinal;
     };
 
-    // Inicialização da câmera e relógio... (Manter as funções anteriores)
-    setInterval(() => { document.getElementById('txt-time').innerText = new Date().toLocaleTimeString('pt-BR'); }, 1000);
-    init();
+    setInterval(() => {
+        const d = new Date();
+        document.getElementById('txt-time').innerText = d.toLocaleTimeString('pt-BR');
+        document.getElementById('txt-date').innerText = d.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+    }, 1000);
 
+    init();
 </script>
 </body>
 </html>
