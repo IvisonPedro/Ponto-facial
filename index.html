@@ -3,89 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radar Ponto - GitHub Edition</title>
+    <title>Radar Ponto - Admin Seguro</title>
     <style>
-        :root { --primary: #003366; --bg: #f8fafc; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .card { background: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center; }
-        .logo { font-size: 1.8rem; font-weight: bold; color: var(--primary); border: 3px solid var(--primary); padding: 5px 15px; border-radius: 10px; display: inline-block; margin-bottom: 20px; }
-        #video-container { width: 100%; border-radius: 1rem; overflow: hidden; background: #000; margin: 15px 0; aspect-ratio: 4/3; position: relative; }
+        :root { --primary: #003366; --secondary: #64748b; --bg: #f8fafc; --success: #10b981; --danger: #ef4444; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
+        
+        nav { background: var(--primary); padding: 10px; display: flex; justify-content: center; gap: 20px; position: sticky; top: 0; z-index: 100; }
+        nav button { background: transparent; border: none; color: white; font-weight: 600; cursor: pointer; padding: 10px; opacity: 0.7; }
+        nav button.active { opacity: 1; border-bottom: 2px solid white; }
+
+        .container { display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 1.5rem; border-radius: 1.2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 500px; }
+
+        .logo { font-size: 1.4rem; font-weight: 800; color: var(--primary); text-align: center; margin-bottom: 1rem; }
+        #video-container { width: 100%; border-radius: 1rem; overflow: hidden; background: #000; aspect-ratio: 1/1; margin-bottom: 1rem; }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        .clock { font-size: 2.5rem; font-weight: bold; color: #1e293b; }
-        button { background: var(--primary); color: white; border: none; padding: 1rem; border-radius: 0.8rem; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align: center; }
-        .hidden { display: none; }
+        .clock { font-size: 2.2rem; font-weight: bold; text-align: center; margin: 0; }
+        
+        .btn-main { background: var(--primary); color: white; border: none; padding: 1.2rem; border-radius: 1rem; font-size: 1.1rem; font-weight: bold; width: 100%; cursor: pointer; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; text-align: center; }
+
+        /* Estilos Admin */
+        .admin-section { width: 100%; max-width: 800px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-top: 15px; }
+        th { background: #f1f5f9; padding: 12px; text-align: left; font-size: 0.8rem; color: var(--secondary); }
+        td { padding: 12px; border-top: 1px solid #f1f5f9; font-size: 0.9rem; }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="setup-screen" class="card">
-        <div class="logo">RADAR PONTO</div>
-        <p>Digite o ID da empresa para testar</p>
-        <p><small>(Use o ID: <b>radar</b>)</small></p>
-        <input type="text" id="company-id" placeholder="Ex: radar">
-        <button onclick="ativar()">ATIVAR DISPOSITIVO</button>
-    </div>
+    <nav>
+        <button id="nav-ponto" class="active" onclick="showTab('ponto')">PONTO</button>
+        <button id="nav-admin" onclick="showTab('admin')">ADMIN</button>
+    </nav>
 
-    <div id="main-screen" class="card hidden">
-        <div id="display-name" class="logo">---</div>
-        <div id="txt-clock" class="clock">00:00:00</div>
-        <div id="video-container">
-            <video id="video" autoplay muted playsinline></video>
+    <div class="container">
+        <div id="tab-ponto" class="card">
+            <div class="logo">RADAR PONTO</div>
+            <div id="display-clock" class="clock">00:00:00</div>
+            <div id="video-container">
+                <video id="video" autoplay muted playsinline></video>
+            </div>
+            <button class="btn-main" id="btn-registrar" onclick="executarPonto()">BATER PONTO</button>
         </div>
-        <button id="btn-registrar" onclick="baterPonto()">REGISTRAR PONTO</button>
+
+        <div id="tab-login" class="card hidden">
+            <div class="logo">ACESSO RESTRITO</div>
+            <p style="text-align:center">Digite a senha mestra</p>
+            <input type="password" id="admin-password" placeholder="Senha">
+            <button class="btn-main" onclick="verificarSenha()">ENTRAR</button>
+        </div>
+
+        <div id="tab-admin" class="admin-section hidden">
+            <h2>Relatório de Batidas</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hora</th>
+                        <th>Data</th>
+                        <th>Localização</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table-body"></tbody>
+            </table>
+            <br>
+            <button onclick="logoutAdmin()" style="background:var(--secondary)" class="btn-main">SAIR DO PAINEL</button>
+        </div>
     </div>
 
     <script>
-        // Função para simular o banco de dados sem precisar do Firebase agora
-        function ativar() {
-            const id = document.getElementById('company-id').value.trim().toLowerCase();
+        const SENHA_MESTRA = "1234"; // Defina sua senha aqui
+        let isAdminAutenticado = false;
+
+        function showTab(tab) {
+            document.getElementById('tab-ponto').classList.add('hidden');
+            document.getElementById('tab-login').classList.add('hidden');
+            document.getElementById('tab-admin').classList.add('hidden');
             
-            if (id === 'radar') {
-                localStorage.setItem('local_id', 'Empresa Teste');
-                iniciarSistema();
+            if (tab === 'ponto') {
+                document.getElementById('tab-ponto').classList.remove('hidden');
+            } else if (tab === 'admin') {
+                if (isAdminAutenticado) {
+                    document.getElementById('tab-admin').classList.remove('hidden');
+                    carregarAdmin();
+                } else {
+                    document.getElementById('tab-login').classList.remove('hidden');
+                }
+            }
+        }
+
+        function verificarSenha() {
+            const pass = document.getElementById('admin-password').value;
+            if (pass === SENHA_MESTRA) {
+                isAdminAutenticado = true;
+                showTab('admin');
             } else {
-                alert("ID não encontrado. Use o ID: radar");
+                alert("Senha incorreta!");
             }
         }
 
-        async function iniciarSistema() {
-            const empresa = localStorage.getItem('local_id');
-            if (!empresa) return;
-
-            document.getElementById('setup-screen').classList.add('hidden');
-            document.getElementById('main-screen').classList.remove('hidden');
-            document.getElementById('display-name').innerText = empresa;
-
-            // Relógio
-            setInterval(() => {
-                document.getElementById('txt-clock').innerText = new Date().toLocaleTimeString('pt-BR');
-            }, 1000);
-
-            // Câmera
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                document.getElementById('video').srcObject = stream;
-            } catch (err) {
-                alert("Erro ao acessar câmera: " + err);
-            }
+        function logoutAdmin() {
+            isAdminAutenticado = false;
+            document.getElementById('admin-password').value = "";
+            showTab('ponto');
         }
 
-        function baterPonto() {
+        // Relógio
+        setInterval(() => {
+            document.getElementById('display-clock').innerText = new Date().toLocaleTimeString('pt-BR');
+        }, 1000);
+
+        // Câmera
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(s => document.getElementById('video').srcObject = s);
+
+        // Registro
+        function executarPonto() {
             const btn = document.getElementById('btn-registrar');
-            btn.innerText = "REGISTRADO!";
-            btn.style.background = "#10b981";
-            
-            setTimeout(() => {
-                btn.innerText = "REGISTRAR PONTO";
-                btn.style.background = "#003366";
-                alert("Ponto registrado localmente com sucesso!");
-            }, 1500);
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const registro = {
+                    hora: new Date().toLocaleTimeString('pt-BR'),
+                    data: new Date().toLocaleDateString('pt-BR'),
+                    lat: pos.coords.latitude.toFixed(4),
+                    lon: pos.coords.longitude.toFixed(4)
+                };
+                let db = JSON.parse(localStorage.getItem('db_pontos') || '[]');
+                db.unshift(registro);
+                localStorage.setItem('db_pontos', JSON.stringify(db));
+                alert("Ponto batido com sucesso!");
+            });
         }
 
-        // Verifica se já está logado ao carregar a página
-        if (localStorage.getItem('local_id')) {
-            iniciarSistema();
+        function carregarAdmin() {
+            const db = JSON.parse(localStorage.getItem('db_pontos') || '[]');
+            document.getElementById('admin-table-body').innerHTML = db.map(r => `
+                <tr>
+                    <td>${r.hora}</td>
+                    <td>${r.data}</td>
+                    <td><a href="https://www.google.com/maps?q=${r.lat},${r.lon}" target="_blank">📍 Ver</a></td>
+                </tr>
+            `).join('');
         }
     </script>
 </body>
