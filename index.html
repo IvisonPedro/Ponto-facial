@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radar Ponto - Biometria Facial</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <title>Radar Ponto - GitHub Edition</title>
     <style>
         :root { --primary: #003366; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
-        .card { background: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }
-        .logo { font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 1rem; border: 3px solid var(--primary); display: inline-block; padding: 0.2rem 1rem; border-radius: 0.5rem; }
-        #video-container { position: relative; width: 100%; border-radius: 1rem; overflow: hidden; background: #000; margin: 1rem 0; aspect-ratio: 4/3; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .card { background: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center; }
+        .logo { font-size: 1.8rem; font-weight: bold; color: var(--primary); border: 3px solid var(--primary); padding: 5px 15px; border-radius: 10px; display: inline-block; margin-bottom: 20px; }
+        #video-container { width: 100%; border-radius: 1rem; overflow: hidden; background: #000; margin: 15px 0; aspect-ratio: 4/3; position: relative; }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        .clock { font-size: 2.2rem; font-weight: bold; color: #1e293b; margin-bottom: 0.2rem; }
-        .date { color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem; text-transform: capitalize; }
-        button { background: var(--primary); color: white; border: none; padding: 1rem; border-radius: 0.75rem; font-size: 1.1rem; font-weight: 600; cursor: pointer; width: 100%; }
-        input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; text-align: center; }
+        .clock { font-size: 2.5rem; font-weight: bold; color: #1e293b; }
+        button { background: var(--primary); color: white; border: none; padding: 1rem; border-radius: 0.8rem; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; text-align: center; }
         .hidden { display: none; }
     </style>
 </head>
@@ -23,89 +21,72 @@
 
     <div id="setup-screen" class="card">
         <div class="logo">RADAR PONTO</div>
-        <p>Digite o ID da empresa para ativar</p>
+        <p>Digite o ID da empresa para testar</p>
+        <p><small>(Use o ID: <b>radar</b>)</small></p>
         <input type="text" id="company-id" placeholder="Ex: radar">
-        <button onclick="vincularEmpresa()">ATIVAR DISPOSITIVO</button>
+        <button onclick="ativar()">ATIVAR DISPOSITIVO</button>
     </div>
 
     <div id="main-screen" class="card hidden">
-        <div id="company-name" class="logo">CARREGANDO...</div>
+        <div id="display-name" class="logo">---</div>
         <div id="txt-clock" class="clock">00:00:00</div>
-        <div id="txt-date" class="date">---</div>
-        
         <div id="video-container">
             <video id="video" autoplay muted playsinline></video>
         </div>
-
-        <button id="btn-registrar" onclick="registrarPonto()">REGISTRAR PONTO</button>
+        <button id="btn-registrar" onclick="baterPonto()">REGISTRAR PONTO</button>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
-            authDomain: "radar-ponto.firebaseapp.com",
-            projectId: "radar-ponto",
-            storageBucket: "radar-ponto.appspot.com",
-            appId: "1:957045066994:web:740afa605071c69e3ed46b"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        window.vincularEmpresa = async () => {
+    <script>
+        // Função para simular o banco de dados sem precisar do Firebase agora
+        function ativar() {
             const id = document.getElementById('company-id').value.trim().toLowerCase();
-            const snap = await getDoc(doc(db, "configuracoes_mestre", id));
-            if (snap.exists()) {
-                localStorage.setItem('id_radar', id);
-                location.reload();
-            } else { alert("ID Inválido!"); }
-        };
+            
+            if (id === 'radar') {
+                localStorage.setItem('local_id', 'Empresa Teste');
+                iniciarSistema();
+            } else {
+                alert("ID não encontrado. Use o ID: radar");
+            }
+        }
 
-        async function iniciar() {
-            const idAtivo = localStorage.getItem('id_radar');
-            if (!idAtivo) return;
-
-            const snap = await getDoc(doc(db, "configuracoes_mestre", idAtivo));
-            const d = snap.data();
+        async function iniciarSistema() {
+            const empresa = localStorage.getItem('local_id');
+            if (!empresa) return;
 
             document.getElementById('setup-screen').classList.add('hidden');
             document.getElementById('main-screen').classList.remove('hidden');
-            document.getElementById('company-name').innerText = d.nome;
-            document.documentElement.style.setProperty('--primary', d.cor);
+            document.getElementById('display-name').innerText = empresa;
 
+            // Relógio
             setInterval(() => {
-                const n = new Date();
-                document.getElementById('txt-clock').innerText = n.toLocaleTimeString('pt-BR');
-                document.getElementById('txt-date').innerText = n.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+                document.getElementById('txt-clock').innerText = new Date().toLocaleTimeString('pt-BR');
             }, 1000);
 
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            document.getElementById('video').srcObject = stream;
+            // Câmera
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('video').srcObject = stream;
+            } catch (err) {
+                alert("Erro ao acessar câmera: " + err);
+            }
         }
 
-        window.registrarPonto = async () => {
-            const id = localStorage.getItem('id_radar');
+        function baterPonto() {
             const btn = document.getElementById('btn-registrar');
-            btn.innerText = "PROCESSANDO...";
-            btn.disabled = true;
-
-            try {
-                await addDoc(collection(db, `empresas/${id}/pontos`), {
-                    horario: serverTimestamp(),
-                    origem: "GitHub Pages",
-                    status: "Confirmado"
-                });
-                alert("Ponto registrado com sucesso!");
-            } catch (e) { alert("Erro ao salvar no banco."); }
+            btn.innerText = "REGISTRADO!";
+            btn.style.background = "#10b981";
             
-            btn.innerText = "REGISTRAR PONTO";
-            btn.disabled = false;
-        };
+            setTimeout(() => {
+                btn.innerText = "REGISTRAR PONTO";
+                btn.style.background = "#003366";
+                alert("Ponto registrado localmente com sucesso!");
+            }, 1500);
+        }
 
-        iniciar();
+        // Verifica se já está logado ao carregar a página
+        if (localStorage.getItem('local_id')) {
+            iniciarSistema();
+        }
     </script>
 </body>
 </html>
