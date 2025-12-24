@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Radar Ponto - Biometria Facial</title>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <style>
+        :root { --primary: #003366; --bg: #f8fafc; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; }
+        .logo { font-size: 1.8rem; font-weight: bold; color: var(--primary); border: 2px solid var(--primary); padding: 5px 15px; border-radius: 10px; display: inline-block; margin-bottom: 20px; }
+        #video-container { width: 100%; border-radius: 15px; overflow: hidden; background: #000; position: relative; margin: 15px 0; }
+        video { width: 100%; display: block; transform: scaleX(-1); }
+        .clock { font-size: 2.2rem; font-weight: bold; color: #333; }
+        button { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-size: 1rem; font-weight: bold; cursor: pointer; }
+        .hidden { display: none; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+    <div id="setup-screen" class="card">
+        <div class="logo">RADAR PONTO</div>
+        <p>Informe o ID da Empresa</p>
+        <input type="text" id="company-id" placeholder="Ex: radar">
+        <button onclick="vincular()">CONECTAR</button>
+    </div>
+
+    <div id="main-screen" class="card hidden">
+        <div id="company-name" class="logo">CARREGANDO...</div>
+        <div id="txt-clock" class="clock">00:00:00</div>
+        <div id="video-container">
+            <video id="video" autoplay muted playsinline></video>
+        </div>
+        <button id="btn-registrar" onclick="registrar()">REGISTRAR PONTO</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // CONFIGURAÇÃO DO SEU FIREBASE (Apenas para o Banco de Dados)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
+            authDomain: "radar-ponto.firebaseapp.com",
+            projectId: "radar-ponto",
+            storageBucket: "radar-ponto.appspot.com",
+            appId: "1:957045066994:web:740afa605071c69e3ed46b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.vincular = async () => {
+            const id = document.getElementById('company-id').value.trim().toLowerCase();
+            const docSnap = await getDoc(doc(db, "configuracoes_mestre", id));
+            if (docSnap.exists()) {
+                localStorage.setItem('empresa_id', id);
+                location.reload();
+            } else {
+                alert("Empresa não encontrada!");
+            }
+        };
+
+        async function init() {
+            const id = localStorage.getItem('empresa_id');
+            if (!id) return;
+
+            const snap = await getDoc(doc(db, "configuracoes_mestre", id));
+            const dados = snap.data();
+
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('main-screen').classList.remove('hidden');
+            document.getElementById('company-name').innerText = dados.nome;
+            document.documentElement.style.setProperty('--primary', dados.cor || '#003366');
+
+            setInterval(() => {
+                document.getElementById('txt-clock').innerText = new Date().toLocaleTimeString();
+            }, 1000);
+
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            document.getElementById('video').srcObject = stream;
+        }
+
+        window.registrar = async () => {
+            const id = localStorage.getItem('empresa_id');
+            const btn = document.getElementById('btn-registrar');
+            btn.disabled = true;
+            btn.innerText = "PROCESSANDO...";
+
+            try {
+                await addDoc(collection(db, `empresas/${id}/pontos`), {
+                    data: new Date().toISOString(),
+                    local: "GitHub Pages"
+                });
+                alert("Ponto batido!");
+            } catch (e) {
+                alert("Erro ao salvar.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "REGISTRAR PONTO";
+            }
+        };
+
+        init();
+    </script>
+</body>
+</html>
