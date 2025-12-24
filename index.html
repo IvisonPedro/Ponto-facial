@@ -3,68 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Radar - Sistema de Ponto Profissional</title>
+    <title>Radar - Biometria Inteligente</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
     <style>
-        :root { --primary: #102a43; --bg: #ffffff; --card-bg: #102a43; --accent: #10b981; --danger: #ef4444; --warning: #f59e0b; }
-        body { font-family: 'Inter', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; box-sizing: border-box; background-color: #f8fafc; }
+        :root { --primary: #102a43; --accent: #10b981; --danger: #ef4444; --warning: #f59e0b; }
+        body { font-family: 'Inter', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; background: #f8fafc; padding: 10px; }
         
-        /* Layout Totem */
-        #totem-view { width: 100%; max-width: 400px; text-align: center; background: white; padding: 20px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .logo-box { border: 3px solid var(--primary); padding: 5px 20px; display: inline-block; margin-bottom: 5px; }
-        .logo-text { font-size: 2rem; font-weight: 900; color: var(--primary); letter-spacing: 5px; margin: 0; }
-        .clock-card { background: var(--card-bg); border-radius: 25px; padding: 30px 20px; color: white; margin: 20px 0; }
-        .clock-time { font-size: 3.5rem; font-weight: 700; font-family: monospace; }
-        .video-container { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 20px; overflow: hidden; margin-bottom: 20px; position: relative; border: 4px solid #eee; }
+        /* Estilo Totem (Principal) */
+        #totem-view { width: 100%; max-width: 450px; text-align: center; background: white; padding: 20px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: 10px; }
+        .clock-card { background: var(--primary); border-radius: 20px; padding: 25px; color: white; margin-bottom: 20px; }
+        .clock-time { font-size: 3.5rem; font-weight: 900; font-family: monospace; letter-spacing: -2px; }
+        .video-container { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 20px; overflow: hidden; margin-bottom: 20px; border: 4px solid #eee; position: relative; }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        .btn-main { background: var(--primary); color: white; border: none; width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
-        .btn-main:active { transform: scale(0.98); }
+        .btn-ponto { background: var(--primary); color: white; border: none; width: 100%; padding: 20px; border-radius: 15px; font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: 0.3s; }
 
-        /* Layout Admin */
-        #admin-view { width: 100%; max-width: 950px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        /* Estilo Admin */
+        #admin-view { width: 100%; max-width: 900px; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .hidden { display: none !important; }
-        .admin-section { background: #f1f5f9; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.85rem; }
-        .btn-pdf { background: #d9534f; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .admin-section { background: #f1f5f9; padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: left; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #ccc; font-size: 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .btn-save { background: var(--accent); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="totem-view">
-        <div class="logo-box"><h1 class="logo-text">RADAR</h1></div>
+        <h1 style="color:var(--primary); letter-spacing:5px; margin-bottom:15px">RADAR</h1>
         <div class="clock-card">
             <div id="display-clock" class="clock-time">00:00:00</div>
-            <div id="display-date" style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">---</div>
+            <div id="display-date" style="text-transform: uppercase; font-size: 0.8rem; margin-top: 5px; opacity: 0.8;">---</div>
         </div>
         <div class="video-container"><video id="video" autoplay muted playsinline></video></div>
-        <div id="status-msg" style="margin-bottom:15px; font-weight:bold; color:var(--primary)">Iniciando Câmera...</div>
-        <button class="btn-main" id="btn-ponto" onclick="registrarPonto()" disabled style="opacity:0.3">Aguardando Rosto</button>
-        <p><button onclick="abrirAdmin()" style="background:none; border:none; text-decoration:underline; cursor:pointer; color: #999; margin-top: 10px;">Painel Administrativo</button></p>
+        <div id="status-msg" style="margin-bottom:15px; font-weight:bold; color:var(--primary); min-height: 1.2rem;">Iniciando Sistema...</div>
+        <button id="btn-ponto" class="btn-ponto" onclick="registrarPonto()" disabled style="opacity:0.3">AGUARDANDO ROSTO</button>
+        <p><button onclick="abrirAdmin()" style="background:none; border:none; text-decoration:underline; color:#999; cursor:pointer; margin-top:15px">Acesso Administrativo</button></p>
     </div>
 
     <div id="admin-view" class="hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-            <h2 style="margin:0; color:var(--primary)">Gestão Radar Comercial</h2>
-            <button onclick="location.reload()" style="padding:10px; border-radius:8px; cursor:pointer">Voltar ao Totem</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+            <h2 style="color:var(--primary)">Gestão Radar Comercial</h2>
+            <button onclick="location.reload()" style="padding:10px 20px; border-radius:8px; cursor:pointer">Voltar ao Totem</button>
         </div>
 
         <div class="admin-section">
-            <h3>👥 Cadastrar Funcionário</h3>
-            <div style="display:flex; gap:10px">
-                <input type="text" id="new-name" placeholder="Nome Completo" style="padding:12px; flex:1; border-radius:8px; border:1px solid #ccc">
-                <button onclick="capturarBiometria()" style="background:var(--accent); color:white; border:none; padding:12px 20px; border-radius:8px; font-weight:bold; cursor:pointer">Salvar Rosto</button>
-            </div>
+            <h3 style="margin-top:0">👥 Cadastrar Novo Funcionário</h3>
+            <input type="text" id="new-name" placeholder="Digite o Nome Completo">
+            <button class="btn-save" id="btn-save-face" onclick="capturarBiometria()">Salvar Rosto</button>
+            <p id="admin-msg" style="font-size:0.8rem; color:var(--primary); margin-top:8px">O funcionário deve estar visível na câmera.</p>
         </div>
 
         <div class="admin-section">
-            <div style="display:flex; justify-content:space-between; align-items:center">
-                <h3>📄 Registros de Ponto</h3>
-                <button class="btn-pdf" onclick="gerarPDF()">📄 GERAR PDF COM ASSINATURAS</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+                <h3 style="margin:0">📄 Relatório de Pontos</h3>
+                <button onclick="gerarPDF()" style="background:var(--danger); color:white; border:none; padding:12px 20px; border-radius:8px; font-weight:bold; cursor:pointer">GERAR PDF</button>
             </div>
             <table id="tabela-pontos">
                 <thead><tr><th>Funcionário</th><th>Data/Horário</th><th>Ações</th></tr></thead>
@@ -75,7 +72,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, orderBy, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
@@ -89,21 +86,23 @@
         const db = getFirestore(app);
         let faceMatcher = null;
         let usuarioIdentificado = null;
+        let modelosCarregados = false;
 
-        async function iniciarIA() {
+        async function iniciar() {
             const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
             await Promise.all([
                 faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
                 faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
                 faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
             ]);
-            await carregarBancoBiometria();
+            modelosCarregados = true;
+            await carregarBiometrias();
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             document.getElementById('video').srcObject = stream;
             loopReconhecimento();
         }
 
-        async function carregarBancoBiometria() {
+        async function carregarBiometrias() {
             const snap = await getDocs(collection(db, "empresas/radar/biometria"));
             const descritores = [];
             snap.forEach(d => {
@@ -113,107 +112,135 @@
         }
 
         async function loopReconhecimento() {
+            let contadorDesconhecido = 0;
             setInterval(async () => {
-                const detect = await faceapi.detectSingleFace(document.getElementById('video')).withFaceLandmarks().withFaceDescriptor();
-                if (detect && faceMatcher) {
-                    const match = faceMatcher.findBestMatch(detect.descriptor);
-                    usuarioIdentificado = match.label !== "unknown" ? match.label : null;
-                    document.getElementById('status-msg').innerText = usuarioIdentificado ? "OLÁ, " + usuarioIdentificado : "ROSTO NÃO RECONHECIDO";
-                    document.getElementById('btn-ponto').disabled = !usuarioIdentificado;
-                    document.getElementById('btn-ponto').style.opacity = usuarioIdentificado ? "1" : "0.3";
+                if (!modelosCarregados) return;
+                const video = document.getElementById('video');
+                const detect = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+                
+                if (detect) {
+                    if (faceMatcher) {
+                        const match = faceMatcher.findBestMatch(detect.descriptor);
+                        usuarioIdentificado = (match.label !== "unknown") ? match.label : null;
+
+                        if (usuarioIdentificado) {
+                            document.getElementById('status-msg').innerText = "OLÁ, " + usuarioIdentificado.toUpperCase();
+                            document.getElementById('btn-ponto').disabled = false;
+                            document.getElementById('btn-ponto').style.opacity = "1";
+                            document.getElementById('btn-ponto').innerText = "REGISTRAR PONTO";
+                            contadorDesconhecido = 0;
+                        } else {
+                            document.getElementById('status-msg').innerText = "ROSTO NÃO CADASTRADO";
+                            document.getElementById('btn-ponto').disabled = true;
+                            document.getElementById('btn-ponto').style.opacity = "0.3";
+                            
+                            contadorDesconhecido++;
+                            if (contadorDesconhecido > 5) { // 5 segundos detectando rosto sem nome
+                                if (confirm("Rosto não identificado. Deseja cadastrar agora?")) {
+                                    abrirAdmin();
+                                }
+                                contadorDesconhecido = 0;
+                            }
+                        }
+                    } else {
+                        document.getElementById('status-msg').innerText = "NENHUM USUÁRIO NO SISTEMA";
+                    }
+                } else {
+                    document.getElementById('status-msg').innerText = "POSICIONE O ROSTO NA CÂMERA";
+                    document.getElementById('btn-ponto').disabled = true;
+                    document.getElementById('btn-ponto').innerText = "AGUARDANDO ROSTO";
+                    contadorDesconhecido = 0;
                 }
             }, 1000);
         }
 
         window.capturarBiometria = async () => {
-            const nome = document.getElementById('new-name').value;
+            const nome = document.getElementById('new-name').value.trim();
+            const btn = document.getElementById('btn-save-face');
+            if(!nome) return alert("Por favor, digite o nome primeiro!");
+            
+            btn.disabled = true;
+            btn.innerText = "Escaneando...";
+            
             const detect = await faceapi.detectSingleFace(document.getElementById('video')).withFaceLandmarks().withFaceDescriptor();
-            if(nome && detect) {
-                await addDoc(collection(db, "empresas/radar/biometria"), { nome, descriptor: Array.from(detect.descriptor) });
-                alert("Cadastrado com sucesso!");
+            if(detect) {
+                await addDoc(collection(db, "empresas/radar/biometria"), {
+                    nome: nome,
+                    descriptor: Array.from(detect.descriptor)
+                });
+                alert("Sucesso! Biometria de " + nome + " cadastrada.");
                 location.reload();
-            } else { alert("Erro: Verifique o nome ou posicione-se melhor na câmera."); }
+            } else {
+                alert("Erro: Não foi possível detectar seu rosto. Tente novamente.");
+                btn.disabled = false;
+                btn.innerText = "Salvar Rosto";
+            }
         };
 
         window.registrarPonto = async () => {
-            await addDoc(collection(db, "empresas/radar/pontos"), { funcionario: usuarioIdentificado, horario: serverTimestamp() });
-            alert("Ponto batido!");
+            if(!usuarioIdentificado) return;
+            await addDoc(collection(db, "empresas/radar/pontos"), {
+                funcionario: usuarioIdentificado,
+                horario: serverTimestamp()
+            });
+            alert("Ponto de " + usuarioIdentificado + " registrado!");
         };
 
-        window.abrirAdmin = () => { if(prompt("Senha:") === "1234") { document.getElementById('totem-view').classList.add('hidden'); document.getElementById('admin-view').classList.remove('hidden'); renderAdmin(); } };
+        window.abrirAdmin = () => {
+            const senha = prompt("Digite a senha administrativa:");
+            if(senha === "1234") {
+                document.getElementById('totem-view').classList.add('hidden');
+                document.getElementById('admin-view').classList.remove('hidden');
+                renderAdmin();
+            } else if (senha !== null) { alert("Senha incorreta!"); }
+        };
 
         async function renderAdmin() {
-            const pSnap = await getDocs(query(collection(db, "empresas/radar/pontos"), orderBy("horario", "desc")));
-            const pBody = document.getElementById('tbody-pontos');
-            pBody.innerHTML = "";
-            pSnap.forEach(d => {
+            const snap = await getDocs(query(collection(db, "empresas/radar/pontos"), orderBy("horario", "desc")));
+            const body = document.getElementById('tbody-pontos');
+            body.innerHTML = "";
+            snap.forEach(d => {
                 const p = d.data();
-                const dt = p.horario?.toDate().toLocaleString('pt-BR') || "---";
-                pBody.innerHTML += `<tr><td>${p.funcionario}</td><td>${dt}</td><td>
-                    <button onclick="excluirRegistro('${d.id}')">🗑️</button>
-                </td></tr>`;
+                const dt = p.horario?.toDate().toLocaleString('pt-BR') || "Processando...";
+                body.innerHTML += `<tr><td>${p.funcionario}</td><td>${dt}</td><td><button onclick="excluirPonto('${d.id}')">🗑️</button></td></tr>`;
             });
         }
 
-        window.excluirRegistro = async (id) => { if(confirm("Excluir?")) { await deleteDoc(doc(db, "empresas/radar/pontos", id)); renderAdmin(); } };
+        window.excluirPonto = async (id) => { if(confirm("Excluir registro?")) { await deleteDoc(doc(db, "empresas/radar/pontos", id)); renderAdmin(); } };
 
-        // FUNÇÃO DE PDF CORRIGIDA COM ASSINATURAS NO RODAPÉ
         window.gerarPDF = () => {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             const dataEmi = new Date().toLocaleDateString('pt-BR');
 
-            // 1. Cabeçalho
-            doc.setFontSize(14);
-            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14); doc.setFont("helvetica", "bold");
             doc.text("RADAR COMERCIAL LTDA", 105, 15, { align: "center" });
-            doc.setFontSize(10);
-            doc.text("CNPJ: 08.286.530/0001-50", 105, 21, { align: "center" });
+            doc.setFontSize(10); doc.text("CNPJ: 08.286.530/0001-50", 105, 21, { align: "center" });
             doc.setFont("helvetica", "normal");
-            doc.text(`RELATÓRIO DE PONTOS - GERADO EM ${dataEmi}`, 105, 28, { align: "center" });
+            doc.text(`RELATÓRIO DE FREQUÊNCIA - ${dataEmi}`, 105, 28, { align: "center" });
 
-            // 2. Tabela de Pontos
             doc.autoTable({
                 html: '#tabela-pontos',
                 startY: 35,
                 theme: 'grid',
                 headStyles: { fillColor: [16, 42, 67] },
-                margin: { bottom: 60 } // Reserva espaço para as assinaturas no final
+                margin: { bottom: 60 }
             });
 
-            // 3. Cálculo de Posição do Rodapé
-            let finalY = doc.lastAutoTable.finalY + 30;
-            
-            // Se o final da tabela estiver muito perto da borda, cria nova página
-            if (finalY > 255) {
-                doc.addPage();
-                finalY = 40;
-            }
+            let fY = doc.lastAutoTable.finalY + 30;
+            if (fY > 255) { doc.addPage(); fY = 40; }
+            doc.line(20, fY, 90, fY); doc.text("Assinatura do Funcionário", 55, fY + 7, { align: "center" });
+            doc.line(120, fY, 190, fY); doc.text("RADAR COMERCIAL LTDA", 155, fY + 7, { align: "center" });
 
-            // 4. Desenho das Assinaturas
-            doc.setFontSize(10);
-            doc.setFont("helvetica", "bold");
-
-            // Assinatura Funcionário
-            doc.line(20, finalY, 90, finalY);
-            doc.text("Assinatura do Funcionário", 55, finalY + 7, { align: "center" });
-
-            // Assinatura Empresa
-            doc.line(120, finalY, 190, finalY);
-            doc.text("RADAR COMERCIAL LTDA", 155, finalY + 7, { align: "center" });
-            doc.setFontSize(8);
-            doc.setFont("helvetica", "normal");
-            doc.text("Carimbo e Responsável", 155, finalY + 12, { align: "center" });
-
-            doc.save(`Folha_Ponto_Radar_${dataEmi.replace(/\//g, '-')}.pdf`);
+            doc.save("Relatorio_Radar.pdf");
         };
 
         setInterval(() => {
             document.getElementById('display-clock').innerText = new Date().toLocaleTimeString('pt-BR');
-            document.getElementById('display-date').innerText = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+            document.getElementById('display-date').innerText = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
         }, 1000);
 
-        iniciarIA();
+        iniciar();
     </script>
 </body>
 </html>
