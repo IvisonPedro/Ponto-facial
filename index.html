@@ -21,6 +21,7 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-red { background: #dc2626; color: white; }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); font-size: 14px; padding: 12px; }
         .btn-small { padding: 8px; font-size: 12px; width: auto; margin: 5px; border-radius: 8px; }
         .hidden { display: none !important; }
         @media print { .no-print { display: none !important; } .page-break { page-break-after: always; border: 1px solid #000; padding: 20px; margin-bottom: 20px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; } }
@@ -30,10 +31,18 @@
 
 <div id="lock-screen" style="background: #003366; position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
     <div class="card" style="max-width: 350px;">
-        <h3>🛡️ Radar Revenda</h3>
-        <p>Insira a senha mestra ou ID da empresa na URL</p>
+        <h3 style="margin-top:0;">🛡️ Radar Revenda</h3>
+        <p style="font-size: 14px; color: #64748b;">Acesse com seu ID de empresa ou senha mestra.</p>
+        
         <input type="password" id="master-pass" placeholder="Senha Mestra" style="text-align: center;">
         <button class="btn-primary" onclick="acessarRevenda()">ENTRAR NO PAINEL</button>
+        
+        <div style="margin: 20px 0; border-top: 1px solid #eee; padding-top: 20px;">
+            <p style="font-size: 13px; margin-bottom: 10px;">Não tem acesso ou precisa de ajuda?</p>
+            <button class="btn-outline" onclick="window.open('https://wa.me/5548988636952?text=Olá, preciso de suporte com o Radar Ponto', '_blank')">
+                💬 CONTACTAR SUPORTE
+            </button>
+        </div>
     </div>
 </div>
 
@@ -70,7 +79,6 @@
     <div class="card" style="max-width: 850px; text-align: left;">
         <button class="btn-red" style="width:auto; padding:10px;" onclick="voltarAoTotem()">⬅ VOLTAR</button>
         <h3 id="adm-titulo">Painel Administrativo</h3>
-        
         <div class="no-print" style="background:#f1f5f9; padding:15px; border-radius:15px; margin-bottom:15px;">
             <input type="month" id="filtro-mes">
             <div style="display:flex; gap:5px; flex-wrap: wrap;">
@@ -79,7 +87,6 @@
                 <button class="btn-primary" onclick="window.print()" style="flex:1; background:#6366f1;">🖨️ PDF</button>
             </div>
         </div>
-        
         <button class="btn-success no-print" onclick="entrarModoCadastro()">+ CADASTRAR NOVO FUNCIONÁRIO</button>
         <div id="box-relatorio" style="margin-top:20px;"></div>
     </div>
@@ -108,7 +115,7 @@
     let modoCadastro = false;
 
     async function init() {
-        if (!empresaID) return; // Fica na tela de bloqueio se não houver ID
+        if (!empresaID) return;
 
         try {
             const snap = await getDoc(doc(db, "configuracoes_mestre", empresaID));
@@ -123,9 +130,7 @@
             } else {
                 alert("ID da empresa não encontrado.");
             }
-        } catch (e) {
-            console.error("Erro Firebase:", e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     window.acessarRevenda = () => {
@@ -157,6 +162,7 @@
         </div>`);
         document.getElementById('lista-clientes').innerHTML = h;
     }
+
     window.delC = async (id) => { if(confirm("Excluir empresa?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); listarClientes(); }};
 
     async function ligarCamera() {
@@ -166,7 +172,7 @@
         await faceapi.nets.faceRecognitionNet.loadFromUri(weights);
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         document.getElementById('video').srcObject = stream;
-        document.getElementById('status-msg').innerText = "Câmera On";
+        document.getElementById('status-msg').innerText = "Sistema Pronto";
 
         onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
             const desc = []; s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
@@ -223,7 +229,6 @@
         alert("Aponte a câmera para o funcionário e clique em CAPTURAR ROSTO");
     };
 
-    // --- FUNÇÕES DE GESTÃO ---
     window.excluirFuncionario = async (nome) => {
         if(confirm(`Excluir permanentemente ${nome}?`)) {
             await deleteDoc(doc(db, `empresas/${empresaID}/biometria`, nome));
@@ -270,7 +275,7 @@
                 <button class="btn-red btn-small no-print" onclick="excluirFuncionario('${n}')">🗑️ EXCLUIR FUNCIONÁRIO</button>
                 <center><h3>${configEmpresa.nome} - PONTO</h3></center>
                 <p><b>FUNCIONÁRIO:</b> ${n.toUpperCase()}</p>
-                <table border="1"><tr><th>DATA</th><th>BATIDAS</th><th>TOTAL</th></tr>${rows}</table>
+                <table width="100%" border="1"><tr><th>DATA</th><th>BATIDAS</th><th>TOTAL</th></tr>${rows}</table>
             </div><hr class="no-print">`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
