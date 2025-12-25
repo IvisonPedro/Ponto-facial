@@ -17,7 +17,7 @@
         #video-container { width: 100%; border-radius: 20px; overflow: hidden; background: #000; aspect-ratio: 4/3; position: relative; }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
         button { padding: 18px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; font-size: 18px; margin-top: 10px; text-transform: uppercase; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-red { background: #dc2626; color: white; }
@@ -35,11 +35,13 @@
     <div class="card" style="max-width: 350px;">
         <h3 style="margin-top:0;">🕗 Bem Vindo ao Ponto Radar</h3>
         <p style="font-size: 14px; color: #64748b;">Acesse com seu ID de empresa ou senha mestra.</p>
+        
         <input type="password" id="master-pass" placeholder="Senha Mestra" style="text-align: center;">
+        
         <button class="btn-primary" onclick="acessarRevenda()">ENTRAR NO PAINEL</button>
         <div style="margin: 20px 0; border-top: 1px solid #eee; padding-top: 20px;">
             <p style="font-size: 13px; margin-bottom: 10px;">Não tem acesso ou precisa de ajuda?</p>
-            <button class="btn-outline" onclick="window.open('https://wa.me/5547997691722?text=Olá, preciso de suporte com o Radar Ponto', '_blank')">
+            <button class="btn-outline" onclick="window.open('https://wa.me/5548988636952?text=Olá, preciso de suporte com o Radar Ponto', '_blank')">
                 💬 CONTACTAR SUPORTE
             </button>
         </div>
@@ -209,7 +211,7 @@
                 rows += `<tr><td>${dt}</td><td>${batidas.map(b=>b.hora).join(' | ')}</td><td>${Math.floor(totalMins/60)}h ${totalMins%60}m</td></tr>`;
             });
             h += `<div class="page-break">
-                <button class="btn-red btn-small no-print" onclick="excluirFuncionario('${n}')">🗑️ EXCLUIR</button>
+                <button class="btn-red btn-small no-print" onclick="window.excluirFuncionario('${n}')">🗑️ EXCLUIR</button>
                 <center><h3>${configEmpresa.nome} - RELATÓRIO DE PONTO</h3></center>
                 <p><b>FUNCIONÁRIO:</b> ${n.toUpperCase()}</p>
                 <table><tr><th>DATA</th><th>BATIDAS</th><th>TOTAL ACUMULADO</th></tr>${rows}</table>
@@ -217,6 +219,21 @@
             </div><hr class="no-print">`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
+    };
+
+    window.excluirFuncionario = async (nome) => {
+        if(confirm(`Excluir permanentemente ${nome}?`)) {
+            await deleteDoc(doc(db, `empresas/${empresaID}/biometria`, nome));
+            alert("Excluído!"); window.gerarRelatorio();
+        }
+    };
+
+    window.editarValorHora = async (nome, valorAtual) => {
+        const novo = prompt(`Novo valor hora para ${nome}:`, valorAtual);
+        if(novo) {
+            await updateDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { valorHora: parseFloat(novo) });
+            alert("Atualizado!"); window.gerarHolerite();
+        }
     };
 
     window.gerarHolerite = async () => {
@@ -235,7 +252,7 @@
             });
             const hDec = totalMins/60, total = hDec * vh;
             h += `<div class="page-break">
-                <button class="btn-primary btn-small no-print" onclick="editarValorHora('${fDoc.id}', ${vh})">✏️ EDITAR VALOR HORA</button>
+                <button class="btn-primary btn-small no-print" onclick="window.editarValorHora('${fDoc.id}', ${vh})">✏️ EDITAR VALOR HORA</button>
                 <div style="border:2px solid #000; padding:20px;">
                     <center><h2>RECIBO DE PAGAMENTO</h2></center>
                     <p><b>EMPRESA:</b> ${configEmpresa.nome}</p>
