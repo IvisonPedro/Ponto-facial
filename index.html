@@ -24,22 +24,22 @@
         .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); font-size: 14px; padding: 12px; }
         .btn-small { padding: 8px; font-size: 12px; width: auto; margin: 5px; border-radius: 8px; }
         .hidden { display: none !important; }
-        @media print { .no-print { display: none !important; } .page-break { page-break-after: always; border: 1px solid #000; padding: 20px; margin-bottom: 20px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; } }
+        .signature-box { margin-top: 60px; display: flex; justify-content: space-between; text-align: center; font-size: 12px; }
+        .sig-line { width: 40%; border-top: 1px solid #000; padding-top: 5px; }
+        @media print { .no-print { display: none !important; } .page-break { page-break-after: always; padding: 20px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; } }
     </style>
 </head>
 <body>
 
 <div id="lock-screen" style="background: #003366; position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
     <div class="card" style="max-width: 350px;">
-        <h3 style="margin-top:0;">🛡️ Radar Revenda</h3>
+        <h3 style="margin-top:0;">🕗 Bem Vindo ao Ponto Radar</h3>
         <p style="font-size: 14px; color: #64748b;">Acesse com seu ID de empresa ou senha mestra.</p>
-        
         <input type="password" id="master-pass" placeholder="Senha Mestra" style="text-align: center;">
         <button class="btn-primary" onclick="acessarRevenda()">ENTRAR NO PAINEL</button>
-        
         <div style="margin: 20px 0; border-top: 1px solid #eee; padding-top: 20px;">
             <p style="font-size: 13px; margin-bottom: 10px;">Não tem acesso ou precisa de ajuda?</p>
-            <button class="btn-outline" onclick="window.open('https://wa.me/5547997691722?text=Olá, preciso de suporte com o Radar Ponto', '_blank')">
+            <button class="btn-outline" onclick="window.open('https://wa.me/5548988636952?text=Olá, preciso de suporte com o Radar Ponto', '_blank')">
                 💬 CONTACTAR SUPORTE
             </button>
         </div>
@@ -55,8 +55,7 @@
         <input type="color" id="m-cor" value="#003366" style="height:50px">
         <input id="m-logo" placeholder="URL da Logo">
         <button class="btn-success" onclick="salvarCliente()">CADASTRAR EMPRESA</button>
-        <hr>
-        <div id="lista-clientes" style="text-align: left;"></div>
+        <hr><div id="lista-clientes" style="text-align: left;"></div>
         <button class="btn-red" onclick="location.reload()">SAIR</button>
     </div>
 </div>
@@ -64,10 +63,7 @@
 <div id="screen-totem" class="container hidden">
     <div class="card">
         <div id="display-logo" class="logo-box"></div>
-        <div class="clock-box">
-            <div class="time" id="txt-time">00:00:00</div>
-            <div id="txt-date" style="font-size: 14px; opacity: 0.8;">...</div>
-        </div>
+        <div class="clock-box"><div class="time" id="txt-time">00:00:00</div><div id="txt-date" style="font-size: 14px; opacity: 0.8;">...</div></div>
         <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
         <p id="status-msg">Carregando...</p>
         <button class="btn-red" id="btn-main" onclick="processarAcao()">REGISTRAR PONTO</button>
@@ -110,13 +106,10 @@
     const empresaID = params.get('id')?.toLowerCase().trim();
     const SENHA_MESTRA = "9988";
 
-    let configEmpresa = null;
-    let faceMatcher = null;
-    let modoCadastro = false;
+    let configEmpresa = null, faceMatcher = null, modoCadastro = false;
 
     async function init() {
         if (!empresaID) return;
-
         try {
             const snap = await getDoc(doc(db, "configuracoes_mestre", empresaID));
             if (snap.exists()) {
@@ -127,8 +120,6 @@
                 document.getElementById('display-logo').innerHTML = configEmpresa.logo ? `<img src="${configEmpresa.logo}">` : `<h2>${configEmpresa.nome}</h2>`;
                 document.getElementById('adm-titulo').innerText = "Gestão: " + configEmpresa.nome;
                 ligarCamera();
-            } else {
-                alert("ID da empresa não encontrado.");
             }
         } catch (e) { console.error(e); }
     }
@@ -143,27 +134,21 @@
 
     window.salvarCliente = async () => {
         const id = document.getElementById('m-id').value.toLowerCase().trim();
-        if(!id) return alert("Digite um ID");
         await setDoc(doc(db, "configuracoes_mestre", id), { 
-            nome: document.getElementById('m-nome').value, 
-            senha: document.getElementById('m-senha').value, 
-            cor: document.getElementById('m-cor').value, 
-            logo: document.getElementById('m-logo').value 
+            nome: document.getElementById('m-nome').value, senha: document.getElementById('m-senha').value, 
+            cor: document.getElementById('m-cor').value, logo: document.getElementById('m-logo').value 
         });
-        alert("Empresa Salva!"); listarClientes();
+        alert("Salvo!"); listarClientes();
     };
 
     async function listarClientes() {
         const s = await getDocs(collection(db, "configuracoes_mestre"));
         let h = "<h4>Empresas:</h4>"; 
-        s.forEach(d => h += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
-            <span><b>${d.id}</b></span>
-            <button class="btn-red btn-small" onclick="window.delC('${d.id}')">X</button>
-        </div>`);
+        s.forEach(d => h += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><span><b>${d.id}</b></span><button class="btn-red btn-small" onclick="window.delC('${d.id}')">X</button></div>`);
         document.getElementById('lista-clientes').innerHTML = h;
     }
 
-    window.delC = async (id) => { if(confirm("Excluir empresa?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); listarClientes(); }};
+    window.delC = async (id) => { if(confirm("Excluir?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); listarClientes(); }};
 
     async function ligarCamera() {
         const weights = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
@@ -172,110 +157,63 @@
         await faceapi.nets.faceRecognitionNet.loadFromUri(weights);
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         document.getElementById('video').srcObject = stream;
-        document.getElementById('status-msg').innerText = "Sistema Pronto";
-
         onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
             const desc = []; s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
             faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.6) : null;
+            document.getElementById('status-msg').innerText = "Sistema Pronto";
         });
     }
 
     window.processarAcao = async () => {
         const det = await faceapi.detectSingleFace(document.getElementById('video'), new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
         if(!det) return alert("Rosto não detectado!");
-
         if(modoCadastro) {
-            const nome = prompt("Nome do Funcionário:");
-            const vh = prompt("Valor da Hora (Ex: 20.00):");
+            const nome = prompt("Nome:"), vh = prompt("Valor Hora:");
             if(nome && vh) {
-                await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { 
-                    descriptor: Array.from(det.descriptor), valorHora: parseFloat(vh) 
-                });
-                alert("Funcionário Cadastrado!"); 
-                voltarAoTotem();
+                await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { descriptor: Array.from(det.descriptor), valorHora: parseFloat(vh) });
+                alert("Cadastrado!"); voltarAoTotem();
             }
         } else {
             const m = faceMatcher?.findBestMatch(det.descriptor);
             if(m && m.label !== 'unknown') {
-                const agora = new Date();
-                const hora = agora.toLocaleTimeString('pt-BR').substring(0,5);
-                await addDoc(collection(db, `empresas/${empresaID}/pontos`), { 
-                    nome: m.label, data: agora.toLocaleDateString('pt-BR'), hora: hora, timestamp: Date.now() 
-                });
-                alert("REGISTRADO: " + m.label + " às " + hora);
+                const agora = new Date(), hora = agora.toLocaleTimeString('pt-BR').substring(0,5);
+                await addDoc(collection(db, `empresas/${empresaID}/pontos`), { nome: m.label, data: agora.toLocaleDateString('pt-BR'), hora: hora, timestamp: Date.now() });
+                alert("REGISTRADO: " + m.label);
             } else alert("Não reconhecido.");
         }
     };
 
-    window.abrirPainelEmpresa = () => {
-        if(prompt("Senha Administrativa:") === configEmpresa.senha) {
-            document.getElementById('screen-totem').classList.add('hidden');
-            document.getElementById('screen-adm').classList.remove('hidden');
-        }
-    };
+    window.abrirPainelEmpresa = () => { if(prompt("Senha ADM:") === configEmpresa.senha) { document.getElementById('screen-totem').classList.add('hidden'); document.getElementById('screen-adm').classList.remove('hidden'); } };
+    window.voltarAoTotem = () => { modoCadastro = false; document.getElementById('btn-main').innerText = "REGISTRAR PONTO"; document.getElementById('screen-adm').classList.add('hidden'); document.getElementById('screen-totem').classList.remove('hidden'); };
+    window.entrarModoCadastro = () => { modoCadastro = true; document.getElementById('screen-adm').classList.add('hidden'); document.getElementById('screen-totem').classList.remove('hidden'); document.getElementById('btn-main').innerText = "CAPTURAR ROSTO"; };
 
-    window.voltarAoTotem = () => {
-        modoCadastro = false;
-        document.getElementById('btn-main').innerText = "REGISTRAR PONTO";
-        document.getElementById('screen-adm').classList.add('hidden');
-        document.getElementById('screen-totem').classList.remove('hidden');
-    };
-
-    window.entrarModoCadastro = () => {
-        modoCadastro = true;
-        document.getElementById('screen-adm').classList.add('hidden');
-        document.getElementById('screen-totem').classList.remove('hidden');
-        document.getElementById('btn-main').innerText = "CAPTURAR ROSTO";
-        alert("Aponte a câmera para o funcionário e clique em CAPTURAR ROSTO");
-    };
-
-    window.excluirFuncionario = async (nome) => {
-        if(confirm(`Excluir permanentemente ${nome}?`)) {
-            await deleteDoc(doc(db, `empresas/${empresaID}/biometria`, nome));
-            alert("Excluído!"); gerarRelatorio();
-        }
-    };
-
-    window.editarValorHora = async (nome, valorAtual) => {
-        const novo = prompt(`Novo valor hora para ${nome}:`, valorAtual);
-        if(novo) {
-            await updateDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { valorHora: parseFloat(novo) });
-            alert("Atualizado!"); gerarHolerite();
-        }
-    };
-
-    async function carregarDados() {
-        const mesSel = document.getElementById('filtro-mes').value;
-        if(!mesSel) return alert("Selecione o mês");
-        const [ano, mes] = mesSel.split('-');
-        const ptsSnap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
-        const funcSnap = await getDocs(collection(db, `empresas/${empresaID}/biometria`));
-        let pontos = []; ptsSnap.forEach(d => { if(d.data().data.includes(`/${mes}/${ano}`)) pontos.push(d.data()); });
-        return { pontos, funcionarios: funcSnap, mes, ano };
-    }
+    const rodapéAssinatura = `
+        <div class="signature-box">
+            <div class="sig-line">Assinatura do Colaborador</div>
+            <div class="sig-line">Carimbo e Assinatura Empresa</div>
+        </div>`;
 
     window.gerarRelatorio = async () => {
         const d = await carregarDados(); if(!d) return;
         let h = "";
         d.funcionarios.forEach(fDoc => {
-            const n = fDoc.id;
-            let totalMins = 0; let rows = "";
+            const n = fDoc.id; let totalMins = 0, rows = "";
             const meusPts = d.pontos.filter(p => p.nome === n);
             const datas = [...new Set(meusPts.map(p => p.data))].sort();
             datas.forEach(dt => {
                 const batidas = meusPts.filter(p => p.data === dt).sort((a,b) => a.hora.localeCompare(b.hora));
                 for(let i=0; i<batidas.length-1; i+=2){
-                    const [h1,m1] = batidas[i].hora.split(':').map(Number);
-                    const [h2,m2] = batidas[i+1].hora.split(':').map(Number);
+                    const [h1,m1] = batidas[i].hora.split(':').map(Number), [h2,m2] = batidas[i+1].hora.split(':').map(Number);
                     totalMins += (h2*60+m2)-(h1*60+m1);
                 }
                 rows += `<tr><td>${dt}</td><td>${batidas.map(b=>b.hora).join(' | ')}</td><td>${Math.floor(totalMins/60)}h ${totalMins%60}m</td></tr>`;
             });
             h += `<div class="page-break">
-                <button class="btn-red btn-small no-print" onclick="excluirFuncionario('${n}')">🗑️ EXCLUIR FUNCIONÁRIO</button>
-                <center><h3>${configEmpresa.nome} - PONTO</h3></center>
+                <button class="btn-red btn-small no-print" onclick="excluirFuncionario('${n}')">🗑️ EXCLUIR</button>
+                <center><h3>${configEmpresa.nome} - RELATÓRIO DE PONTO</h3></center>
                 <p><b>FUNCIONÁRIO:</b> ${n.toUpperCase()}</p>
-                <table width="100%" border="1"><tr><th>DATA</th><th>BATIDAS</th><th>TOTAL</th></tr>${rows}</table>
+                <table><tr><th>DATA</th><th>BATIDAS</th><th>TOTAL ACUMULADO</th></tr>${rows}</table>
+                ${rodapéAssinatura}
             </div><hr class="no-print">`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
@@ -285,35 +223,44 @@
         const d = await carregarDados(); if(!d) return;
         let h = "";
         d.funcionarios.forEach(fDoc => {
-            const f = fDoc.data(); const vh = f.valorHora || 0;
-            let totalMins = 0;
+            const f = fDoc.data(), vh = f.valorHora || 0; let totalMins = 0;
             const meusPts = d.pontos.filter(p => p.nome === fDoc.id);
             const datas = [...new Set(meusPts.map(p => p.data))].sort();
             datas.forEach(dt => {
                 const batidas = meusPts.filter(p => p.data === dt).sort((a,b) => a.hora.localeCompare(b.hora));
                 for(let i=0; i<batidas.length-1; i+=2){
-                    const [h1,m1] = batidas[i].hora.split(':').map(Number);
-                    const [h2,m2] = batidas[i+1].hora.split(':').map(Number);
+                    const [h1,m1] = batidas[i].hora.split(':').map(Number), [h2,m2] = batidas[i+1].hora.split(':').map(Number);
                     totalMins += (h2*60+m2)-(h1*60+m1);
                 }
             });
-            const hDec = totalMins/60; const total = hDec * vh;
+            const hDec = totalMins/60, total = hDec * vh;
             h += `<div class="page-break">
                 <button class="btn-primary btn-small no-print" onclick="editarValorHora('${fDoc.id}', ${vh})">✏️ EDITAR VALOR HORA</button>
                 <div style="border:2px solid #000; padding:20px;">
                     <center><h2>RECIBO DE PAGAMENTO</h2></center>
                     <p><b>EMPRESA:</b> ${configEmpresa.nome}</p>
                     <p><b>COLABORADOR:</b> ${fDoc.id.toUpperCase()}</p>
-                    <table width="100%" border="1">
-                        <tr><td>Horas Totais</td><td>${hDec.toFixed(2)}h</td></tr>
-                        <tr><td>Valor Hora</td><td>R$ ${vh.toFixed(2)}</td></tr>
-                        <tr style="background:#eee"><td><b>TOTAL LÍQUIDO</b></td><td><b>R$ ${total.toFixed(2)}</b></td></tr>
+                    <table width="100%">
+                        <tr><td>Horas Totais Trabalhadas</td><td>${hDec.toFixed(2)}h</td></tr>
+                        <tr><td>Valor da Hora Pactuado</td><td>R$ ${vh.toFixed(2)}</td></tr>
+                        <tr style="background:#eee"><td><b>VALOR LÍQUIDO A RECEBER</b></td><td><b>R$ ${total.toFixed(2)}</b></td></tr>
                     </table>
+                    ${rodapéAssinatura}
                 </div>
             </div><br>`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
     };
+
+    async function carregarDados() {
+        const mesSel = document.getElementById('filtro-mes').value;
+        if(!mesSel) return alert("Mês?");
+        const [ano, mes] = mesSel.split('-');
+        const ptsSnap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
+        const funcSnap = await getDocs(collection(db, `empresas/${empresaID}/biometria`));
+        let pontos = []; ptsSnap.forEach(d => { if(d.data().data.includes(`/${mes}/${ano}`)) pontos.push(d.data()); });
+        return { pontos, funcionarios: funcSnap, mes, ano };
+    }
 
     setInterval(() => {
         const d = new Date();
