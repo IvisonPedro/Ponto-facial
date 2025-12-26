@@ -35,13 +35,11 @@
     <div class="card" style="max-width: 350px;">
         <h3 style="margin-top:0;">🕗 Bem Vindo ao Ponto Radar</h3>
         <p style="font-size: 14px; color: #64748b;">Acesse com seu ID de empresa ou senha mestra.</p>
-        
         <input type="password" id="master-pass" placeholder="Senha Mestra" style="text-align: center;">
-        
         <button class="btn-primary" onclick="acessarRevenda()">ENTRAR NO PAINEL</button>
         <div style="margin: 20px 0; border-top: 1px solid #eee; padding-top: 20px;">
             <p style="font-size: 13px; margin-bottom: 10px;">Não tem acesso ou precisa de ajuda?</p>
-            <button class="btn-outline" onclick="window.open('https://wa.me/5547997691722?text=Olá, preciso de suporte com o Radar Ponto', '_blank')">
+            <button class="btn-outline" onclick="window.open('https://wa.me/5548988636952?text=Olá, preciso de suporte com o Radar Ponto', '_blank')">
                 💬 CONTACTAR SUPORTE
             </button>
         </div>
@@ -92,7 +90,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, deleteDoc, getDoc, query, orderBy, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, setDoc, doc, deleteDoc, getDoc, query, orderBy, onSnapshot, updateDoc, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBRTIODyEYkXMgR5gDbEq2Q62wZ7mgReL8",
@@ -201,15 +199,25 @@
         d.funcionarios.forEach(fDoc => {
             const n = fDoc.id; let totalMins = 0, rows = "";
             const meusPts = d.pontos.filter(p => p.nome === n);
-            const datas = [...new Set(meusPts.map(p => p.data))].sort();
+            const datas = [...new Set(meusPts.map(p => p.data))].sort((a,b) => a.split('/').reverse().join('-').localeCompare(b.split('/').reverse().join('-')));
+            
             datas.forEach(dt => {
-                const batidas = meusPts.filter(p => p.data === dt).sort((a,b) => a.hora.localeCompare(b.hora));
-                for(let i=0; i<batidas.length-1; i+=2){
-                    const [h1,m1] = batidas[i].hora.split(':').map(Number), [h2,m2] = batidas[i+1].hora.split(':').map(Number);
+                const batidasNoDia = meusPts.filter(p => p.data === dt).sort((a,b) => a.hora.localeCompare(b.hora));
+                const batidasTexto = batidasNoDia.map(b => b.hora).join(' | ');
+                
+                for(let i=0; i < batidasNoDia.length-1; i+=2){
+                    const [h1,m1] = batidasNoDia[i].hora.split(':').map(Number);
+                    const [h2,m2] = batidasNoDia[i+1].hora.split(':').map(Number);
                     totalMins += (h2*60+m2)-(h1*60+m1);
                 }
-                rows += `<tr><td>${dt}</td><td>${batidas.map(b=>b.hora).join(' | ')}</td><td>${Math.floor(totalMins/60)}h ${totalMins%60}m</td></tr>`;
+
+                rows += `<tr>
+                    <td>${dt}</td>
+                    <td>${batidasTexto} <button class="btn-small no-print" onclick="window.editarBatidas('${n}', '${dt}', '${batidasTexto}')">✏️</button></td>
+                    <td>${Math.floor(totalMins/60)}h ${totalMins%60}m</td>
+                </tr>`;
             });
+
             h += `<div class="page-break">
                 <button class="btn-red btn-small no-print" onclick="window.excluirFuncionario('${n}')">🗑️ EXCLUIR</button>
                 <center><h3>${configEmpresa.nome} - RELATÓRIO DE PONTO</h3></center>
@@ -219,6 +227,25 @@
             </div><hr class="no-print">`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
+    };
+
+    window.editarBatidas = async (nome, data, batidasAtuais) => {
+        const novaString = prompt(`Editar batidas de ${nome} em ${data}:\nUse o formato HH:MM | HH:MM`, batidasAtuais);
+        if (novaString !== null) {
+            const q = query(collection(db, `empresas/${empresaID}/pontos`), where("nome", "==", nome), where("data", "==", data));
+            const snap = await getDocs(q);
+            const delecoes = snap.docs.map(d => deleteDoc(doc(db, `empresas/${empresaID}/pontos`, d.id)));
+            await Promise.all(delecoes);
+            const novasHoras = novaString.split('|').map(s => s.trim());
+            for (let h of novasHoras) {
+                if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(h)) {
+                    await addDoc(collection(db, `empresas/${empresaID}/pontos`), {
+                        nome: nome, data: data, hora: h, timestamp: new Date(`${data.split('/').reverse().join('-')}T${h}`).getTime()
+                    });
+                }
+            }
+            alert("Atualizado!"); window.gerarRelatorio();
+        }
     };
 
     window.excluirFuncionario = async (nome) => {
