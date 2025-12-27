@@ -10,46 +10,38 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; box-sizing: border-box; }
         
-        /* Card Principal Estilizado */
-        .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; position: relative; }
+        /* Centralização da Logo e Card */
+        .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; display: flex; flex-direction: column; align-items: center; }
         
-        /* Status do Sistema */
-        .status-bar { display: inline-flex; align-items: center; gap: 6px; background: #ecfdf5; color: #065f46; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 15px; border: 1px solid #a7f3d0; }
+        .status-bar { display: inline-flex; align-items: center; gap: 6px; background: #ecfdf5; color: #065f46; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 20px; border: 1px solid #a7f3d0; }
         .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        /* Logo e Inputs */
-        .logo-main { width: 180px; margin-bottom: 20px; border-radius: 15px; }
-        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1.5px solid #e2e8f0; box-sizing: border-box; transition: 0.3s; font-size: 16px; }
-        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(0,51,102,0.1); }
+        /* Logo Centralizada */
+        .logo-main { width: 180px; height: auto; margin: 0 auto 20px auto; display: block; border-radius: 15px; }
         
-        /* Botões */
+        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1.5px solid #e2e8f0; box-sizing: border-box; font-size: 16px; text-align: center; }
         button { padding: 18px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; text-transform: uppercase; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(0,51,102,0.2); }
-        .btn-primary:active { transform: scale(0.98); }
-        
-        /* Grid de Ações Rápidas */
-        .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 1px solid #f1f5f9; }
-        .action-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #64748b; font-size: 11px; font-weight: 600; gap: 5px; }
-        .action-icon { width: 45px; height: 45px; background: #f1f5f9; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: 0.3s; }
-        .action-item:hover .action-icon { background: var(--primary); color: white; }
-
-        /* Rodapé de Links Úteis */
-        .useful-links { margin-top: 30px; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; font-size: 12px; color: #94a3b8; }
-        .useful-links a { color: #94a3b8; text-decoration: none; transition: 0.2s; }
-        .useful-links a:hover { color: var(--primary); text-decoration: underline; }
-
-        /* Estilos das telas internas (Totem e ADM) */
-        .logo-box { border: 2px solid var(--primary); border-radius: 10px; padding: 10px; margin-bottom: 15px; min-height: 60px; display: flex; align-items: center; justify-content: center; }
-        .logo-box img { max-height: 100px; max-width: 100%; }
-        .clock-box { background: #1e293b; color: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
-        .time { font-size: 3.5rem; font-weight: 800; font-family: monospace; }
-        #video-container { width: 100%; border-radius: 20px; overflow: hidden; background: #000; aspect-ratio: 4/3; position: relative; }
-        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-red { background: #dc2626; color: white; }
         .btn-small { padding: 8px; font-size: 12px; width: auto; margin: 5px; border-radius: 8px; }
+
+        .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 1px solid #f1f5f9; width: 100%; }
+        .action-item { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #64748b; font-size: 11px; font-weight: 600; gap: 5px; }
+        .action-icon { width: 45px; height: 45px; background: #f1f5f9; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+        .useful-links { margin-top: 30px; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; font-size: 12px; color: #94a3b8; }
+        .useful-links a { color: #94a3b8; text-decoration: none; }
+
         .hidden { display: none !important; }
+        .logo-box { border: 2px solid var(--primary); border-radius: 10px; padding: 10px; margin-bottom: 15px; min-height: 60px; display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; }
+        .logo-box img { max-height: 80px; max-width: 100%; }
+        .clock-box { background: #1e293b; color: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; width: 100%; box-sizing: border-box; }
+        .time { font-size: 3.5rem; font-weight: 800; font-family: monospace; }
+        #video-container { width: 100%; border-radius: 20px; overflow: hidden; background: #000; aspect-ratio: 4/3; position: relative; }
+        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+
         .signature-box { margin-top: 60px; display: flex; justify-content: space-between; text-align: center; font-size: 12px; }
         .sig-line { width: 40%; border-top: 1px solid #000; padding-top: 5px; }
         @media print { .no-print { display: none !important; } .page-break { page-break-after: always; padding: 20px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; } }
@@ -59,29 +51,21 @@
 
 <div id="lock-screen" class="container" style="background: linear-gradient(135deg, #003366 0%, #001a33 100%); position: fixed; inset: 0; z-index: 9999;">
     <div class="card">
-        <div class="status-bar">
-            <div class="status-dot"></div> SISTEMA ONLINE
-        </div>
-        
+        <div class="status-bar"><div class="status-dot"></div> SISTEMA ONLINE</div>
         <img src="https://i.postimg.cc/Bn5mmDMh/IMG_9724.jpg" class="logo-main" alt="Radar Ponto Logo">
-        
-        <p style="font-size: 14px; color: #64748b; margin-bottom: 20px;">Olá! Insira o ID da empresa ou senha mestra para acessar o terminal.</p>
-        
-        <input type="password" id="master-pass" placeholder="Digite seu acesso..." style="text-align: center;">
+        <p style="font-size: 14px; color: #64748b; margin: 0 0 15px 0;">Insira o ID da empresa ou senha mestra.</p>
+        <input type="password" id="master-pass" placeholder="Digite seu acesso...">
         <button class="btn-primary" onclick="acessarRevenda()">Acessar Painel</button>
         
         <div class="quick-actions">
-            <a href="https://wa.me/5548988636952?text=Preciso de ajuda com o Ponto Radar" target="_blank" class="action-item">
-                <div class="action-icon">💬</div>
-                <span>Suporte</span>
+            <a href="https://wa.me/5547997691722" target="_blank" class="action-item">
+                <div class="action-icon">💬</div><span>Suporte</span>
             </a>
-            <a href="#" onclick="alert('Manual em PDF sendo gerado...')" class="action-item">
-                <div class="action-icon">📄</div>
-                <span>Manual</span>
+            <a href="#" onclick="alert('Manual disponível no painel interno.')" class="action-item">
+                <div class="action-icon">📄</div><span>Manual</span>
             </a>
-            <a href="https://wa.me/5548988636952?text=Assunto: Financeiro" target="_blank" class="action-item">
-                <div class="action-icon">💰</div>
-                <span>Financeiro</span>
+            <a href="https://wa.me/5547997691722" target="_blank" class="action-item">
+                <div class="action-icon">💰</div><span>Financeiro</span>
             </a>
         </div>
 
@@ -102,7 +86,7 @@
         <input type="color" id="m-cor" value="#003366" style="height:50px">
         <input id="m-logo" placeholder="URL da Logo do Cliente">
         <button class="btn-success" onclick="salvarCliente()">CADASTRAR EMPRESA</button>
-        <hr><div id="lista-clientes" style="text-align: left;"></div>
+        <hr style="width:100%"><div id="lista-clientes" style="text-align: left; width:100%;"></div>
         <button class="btn-red" onclick="location.reload()">SAIR</button>
     </div>
 </div>
@@ -110,7 +94,7 @@
 <div id="screen-totem" class="container hidden">
     <div class="card">
         <div id="display-logo" class="logo-box"></div>
-        <div class="clock-box"><div class="time" id="txt-time">00:00:00</div><div id="txt-date" style="font-size: 14px; opacity: 0.8;">...</div></div>
+        <div class="clock-box"><div class="time" id="txt-time">00:00:00</div><div id="txt-date">...</div></div>
         <div id="video-container"><video id="video" autoplay muted playsinline></video></div>
         <p id="status-msg">Carregando...</p>
         <button class="btn-red" id="btn-main" onclick="processarAcao()">REGISTRAR PONTO</button>
@@ -119,10 +103,10 @@
 </div>
 
 <div id="screen-adm" class="container hidden">
-    <div class="card" style="max-width: 850px; text-align: left;">
+    <div class="card" style="max-width: 850px; text-align: left; align-items: flex-start;">
         <button class="btn-red" style="width:auto; padding:10px;" onclick="voltarAoTotem()">⬅ VOLTAR</button>
         <h3 id="adm-titulo">Painel Administrativo</h3>
-        <div class="no-print" style="background:#f1f5f9; padding:15px; border-radius:15px; margin-bottom:15px;">
+        <div class="no-print" style="background:#f1f5f9; padding:15px; border-radius:15px; margin-bottom:15px; width:100%; box-sizing: border-box;">
             <input type="month" id="filtro-mes">
             <div style="display:flex; gap:5px; flex-wrap: wrap;">
                 <button class="btn-primary" onclick="gerarRelatorio()" style="flex:1;">📊 VER PONTOS</button>
@@ -131,7 +115,7 @@
             </div>
         </div>
         <button class="btn-success no-print" onclick="entrarModoCadastro()">+ CADASTRAR NOVO FUNCIONÁRIO</button>
-        <div id="box-relatorio" style="margin-top:20px;"></div>
+        <div id="box-relatorio" style="margin-top:20px; width:100%;"></div>
     </div>
 </div>
 
@@ -172,11 +156,14 @@
     }
 
     window.acessarRevenda = () => {
-        if(document.getElementById('master-pass').value === SENHA_MESTRA) {
+        const val = document.getElementById('master-pass').value;
+        if(val === SENHA_MESTRA) {
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('screen-mestre').classList.remove('hidden');
             listarClientes();
-        } else alert("Senha Incorreta");
+        } else if(val.length > 2) {
+            window.location.search = `?id=${val}`;
+        } else alert("Acesso Inválido");
     };
 
     window.salvarCliente = async () => {
@@ -185,7 +172,7 @@
             nome: document.getElementById('m-nome').value, senha: document.getElementById('m-senha').value, 
             cor: document.getElementById('m-cor').value, logo: document.getElementById('m-logo').value 
         });
-        alert("Salvo!"); listarClientes();
+        alert("Cliente Salvo!"); listarClientes();
     };
 
     async function listarClientes() {
@@ -195,7 +182,7 @@
         document.getElementById('lista-clientes').innerHTML = h;
     }
 
-    window.delC = async (id) => { if(confirm("Deseja mesmo excluir este cliente?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); listarClientes(); }};
+    window.delC = async (id) => { if(confirm("Excluir cliente?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); listarClientes(); }};
 
     async function ligarCamera() {
         const weights = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
@@ -207,34 +194,32 @@
         onSnapshot(collection(db, `empresas/${empresaID}/biometria`), (s) => {
             const desc = []; s.forEach(d => desc.push(new faceapi.LabeledFaceDescriptors(d.id, [new Float32Array(d.data().descriptor)])));
             faceMatcher = desc.length > 0 ? new faceapi.FaceMatcher(desc, 0.6) : null;
-            document.getElementById('status-msg').innerText = "Pronto para Registrar";
+            document.getElementById('status-msg').innerText = "Pronto";
         });
     }
 
     window.processarAcao = async () => {
         const det = await faceapi.detectSingleFace(document.getElementById('video'), new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-        if(!det) return alert("Rosto não detectado. Posicione-se melhor.");
+        if(!det) return alert("Rosto não detectado!");
         if(modoCadastro) {
-            const nome = prompt("Nome do Funcionário:"), vh = prompt("Valor por Hora:");
+            const nome = prompt("Nome:"), vh = prompt("Valor Hora:");
             if(nome && vh) {
                 await setDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { descriptor: Array.from(det.descriptor), valorHora: parseFloat(vh) });
-                alert("Funcionário cadastrado com sucesso!"); voltarAoTotem();
+                alert("Cadastrado!"); voltarAoTotem();
             }
         } else {
             const m = faceMatcher?.findBestMatch(det.descriptor);
             if(m && m.label !== 'unknown') {
                 const agora = new Date(), hora = agora.toLocaleTimeString('pt-BR').substring(0,5);
                 await addDoc(collection(db, `empresas/${empresaID}/pontos`), { nome: m.label, data: agora.toLocaleDateString('pt-BR'), hora: hora, timestamp: Date.now() });
-                alert("REGISTRADO: " + m.label + " às " + hora);
-            } else alert("Funcionário não reconhecido no sistema.");
+                alert("PONTO REGISTRADO: " + m.label);
+            } else alert("Funcionário não reconhecido.");
         }
     };
 
-    window.abrirPainelEmpresa = () => { if(prompt("Senha Administrativa:") === configEmpresa.senha) { document.getElementById('screen-totem').classList.add('hidden'); document.getElementById('screen-adm').classList.remove('hidden'); } };
+    window.abrirPainelEmpresa = () => { if(prompt("Senha ADM:") === configEmpresa.senha) { document.getElementById('screen-totem').classList.add('hidden'); document.getElementById('screen-adm').classList.remove('hidden'); } };
     window.voltarAoTotem = () => { modoCadastro = false; document.getElementById('btn-main').innerText = "REGISTRAR PONTO"; document.getElementById('screen-adm').classList.add('hidden'); document.getElementById('screen-totem').classList.remove('hidden'); };
     window.entrarModoCadastro = () => { modoCadastro = true; document.getElementById('screen-adm').classList.add('hidden'); document.getElementById('screen-totem').classList.remove('hidden'); document.getElementById('btn-main').innerText = "CAPTURAR BIOMETRIA"; };
-
-    const rodapéAssinatura = `<div class="signature-box"><div class="sig-line">Assinatura do Colaborador</div><div class="sig-line">Carimbo e Assinatura Empresa</div></div>`;
 
     window.gerarRelatorio = async () => {
         const d = await carregarDados(); if(!d) return;
@@ -242,43 +227,38 @@
         d.funcionarios.forEach(fDoc => {
             const n = fDoc.id; let totalMins = 0, rows = "";
             const meusPts = d.pontos.filter(p => p.nome === n);
-            const datas = [...new Set(meusPts.map(p => p.data))].sort((a,b) => a.split('/').reverse().join('-').localeCompare(b.split('/').reverse().join('-')));
+            const datas = [...new Set(meusPts.map(p => p.data))].sort();
             datas.forEach(dt => {
                 const batidasNoDia = meusPts.filter(p => p.data === dt).sort((a,b) => a.hora.localeCompare(b.hora));
                 const batidasTexto = batidasNoDia.map(b => b.hora).join(' | ');
                 for(let i=0; i < batidasNoDia.length-1; i+=2){
-                    const [h1,m1] = batidasNoDia[i].hora.split(':').map(Number);
-                    const [h2,m2] = batidasNoDia[i+1].hora.split(':').map(Number);
+                    const [h1,m1] = batidasNoDia[i].hora.split(':').map(Number), [h2,m2] = batidasNoDia[i+1].hora.split(':').map(Number);
                     totalMins += (h2*60+m2)-(h1*60+m1);
                 }
                 rows += `<tr><td>${dt}</td><td>${batidasTexto} <button class="btn-small no-print" onclick="window.editarBatidas('${n}', '${dt}', '${batidasTexto}')">✏️</button></td><td>${Math.floor(totalMins/60)}h ${totalMins%60}m</td></tr>`;
             });
-            h += `<div class="page-break"><button class="btn-red btn-small no-print" onclick="window.excluirFuncionario('${n}')">🗑️ EXCLUIR</button><center><h3>${configEmpresa.nome} - RELATÓRIO DE PONTO</h3></center><p><b>FUNCIONÁRIO:</b> ${n.toUpperCase()}</p><table><tr><th>DATA</th><th>BATIDAS</th><th>TOTAL ACUMULADO</th></tr>${rows}</table>${rodapéAssinatura}</div><hr class="no-print">`;
+            h += `<div class="page-break"><button class="btn-red btn-small no-print" onclick="window.excluirFuncionario('${n}')">🗑️ EXCLUIR</button><h3>RELATÓRIO: ${n.toUpperCase()}</h3><table><tr><th>DATA</th><th>BATIDAS</th><th>TOTAL</th></tr>${rows}</table></div>`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
     };
 
     window.editarBatidas = async (nome, data, batidasAtuais) => {
-        const novaString = prompt(`Editar batidas de ${nome} em ${data}:\nUse o formato HH:MM | HH:MM`, batidasAtuais);
+        const novaString = prompt(`Editar ${nome} em ${data}:`, batidasAtuais);
         if (novaString !== null) {
             const q = query(collection(db, `empresas/${empresaID}/pontos`), where("nome", "==", nome), where("data", "==", data));
             const snap = await getDocs(q);
-            const delecoes = snap.docs.map(d => deleteDoc(doc(db, `empresas/${empresaID}/pontos`, d.id)));
-            await Promise.all(delecoes);
+            for(let dDoc of snap.docs) await deleteDoc(doc(db, `empresas/${empresaID}/pontos`, dDoc.id));
             const novasHoras = novaString.split('|').map(s => s.trim());
             for (let h of novasHoras) {
                 if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(h)) {
-                    await addDoc(collection(db, `empresas/${empresaID}/pontos`), {
-                        nome: nome, data: data, hora: h, timestamp: new Date(`${data.split('/').reverse().join('-')}T${h}`).getTime()
-                    });
+                    await addDoc(collection(db, `empresas/${empresaID}/pontos`), { nome, data, hora: h, timestamp: Date.now() });
                 }
             }
-            alert("Atualizado!"); window.gerarRelatorio();
+            alert("Ok!"); window.gerarRelatorio();
         }
     };
 
-    window.excluirFuncionario = async (nome) => { if(confirm(`Excluir permanentemente ${nome}?`)) { await deleteDoc(doc(db, `empresas/${empresaID}/biometria`, nome)); alert("Excluído!"); window.gerarRelatorio(); } };
-    window.editarValorHora = async (nome, valorAtual) => { const novo = prompt(`Novo valor hora para ${nome}:`, valorAtual); if(novo) { await updateDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { valorHora: parseFloat(novo) }); alert("Atualizado!"); window.gerarHolerite(); } };
+    window.excluirFuncionario = async (nome) => { if(confirm(`Excluir ${nome}?`)) { await deleteDoc(doc(db, `empresas/${empresaID}/biometria`, nome)); window.gerarRelatorio(); } };
 
     window.gerarHolerite = async () => {
         const d = await carregarDados(); if(!d) return;
@@ -286,28 +266,24 @@
         d.funcionarios.forEach(fDoc => {
             const f = fDoc.data(), vh = f.valorHora || 0; let totalMins = 0;
             const meusPts = d.pontos.filter(p => p.nome === fDoc.id);
-            const datas = [...new Set(meusPts.map(p => p.data))].sort();
-            datas.forEach(dt => {
-                const batidas = meusPts.filter(p => p.data === dt).sort((a,b) => a.hora.localeCompare(b.hora));
-                for(let i=0; i<batidas.length-1; i+=2){
-                    const [h1,m1] = batidas[i].hora.split(':').map(Number), [h2,m2] = batidas[i+1].hora.split(':').map(Number);
-                    totalMins += (h2*60+m2)-(h1*60+m1);
-                }
-            });
-            const hDec = totalMins/60, total = hDec * vh;
-            h += `<div class="page-break"><button class="btn-primary btn-small no-print" onclick="window.editarValorHora('${fDoc.id}', ${vh})">✏️ EDITAR VALOR HORA</button><div style="border:2px solid #000; padding:20px;"><center><h2>RECIBO DE PAGAMENTO</h2></center><p><b>EMPRESA:</b> ${configEmpresa.nome}</p><p><b>COLABORADOR:</b> ${fDoc.id.toUpperCase()}</p><table width="100%"><tr><td>Horas Totais Trabalhadas</td><td>${hDec.toFixed(2)}h</td></tr><tr><td>Valor da Hora Pactuado</td><td>R$ ${vh.toFixed(2)}</td></tr><tr style="background:#eee"><td><b>VALOR LÍQUIDO A RECEBER</b></td><td><b>R$ ${total.toFixed(2)}</b></td></tr></table>${rodapéAssinatura}</div></div><br>`;
+            meusPts.forEach((p, i) => { if(i%2===0 && meusPts[i+1]){ 
+                const [h1,m1] = p.hora.split(':').map(Number), [h2,m2] = meusPts[i+1].hora.split(':').map(Number);
+                totalMins += (h2*60+m2)-(h1*60+m1);
+            }});
+            const total = (totalMins/60) * vh;
+            h += `<div class="page-break" style="border:1px solid #000; padding:20px;"><h3>RECIBO: ${fDoc.id.toUpperCase()}</h3><p>Total Horas: ${(totalMins/60).toFixed(2)}</p><p>Valor Hora: R$ ${vh.toFixed(2)}</p><h4>Total a Pagar: R$ ${total.toFixed(2)}</h4></div><br>`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
     };
 
     async function carregarDados() {
         const mesSel = document.getElementById('filtro-mes').value;
-        if(!mesSel) return alert("Por favor, selecione o mês e ano.");
+        if(!mesSel) return alert("Selecione o mês!");
         const [ano, mes] = mesSel.split('-');
         const ptsSnap = await getDocs(query(collection(db, `empresas/${empresaID}/pontos`), orderBy("timestamp", "asc")));
         const funcSnap = await getDocs(collection(db, `empresas/${empresaID}/biometria`));
         let pontos = []; ptsSnap.forEach(d => { if(d.data().data.includes(`/${mes}/${ano}`)) pontos.push(d.data()); });
-        return { pontos, funcionarios: funcSnap, mes, ano };
+        return { pontos, funcionarios: funcSnap };
     }
 
     setInterval(() => {
