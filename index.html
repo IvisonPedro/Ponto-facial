@@ -10,14 +10,12 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         .container { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; box-sizing: border-box; }
         
-        /* Centralização da Logo e Card */
         .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; display: flex; flex-direction: column; align-items: center; }
         
         .status-bar { display: inline-flex; align-items: center; gap: 6px; background: #ecfdf5; color: #065f46; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 20px; border: 1px solid #a7f3d0; }
         .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        /* Logo Centralizada */
         .logo-main { width: 180px; height: auto; margin: 0 auto 20px auto; display: block; border-radius: 15px; }
         
         input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1.5px solid #e2e8f0; box-sizing: border-box; font-size: 16px; text-align: center; }
@@ -42,9 +40,18 @@
         #video-container { width: 100%; border-radius: 20px; overflow: hidden; background: #000; aspect-ratio: 4/3; position: relative; }
         video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        .signature-box { margin-top: 60px; display: flex; justify-content: space-between; text-align: center; font-size: 12px; }
-        .sig-line { width: 40%; border-top: 1px solid #000; padding-top: 5px; }
-        @media print { .no-print { display: none !important; } .page-break { page-break-after: always; padding: 20px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; } }
+        /* Estilos de Assinatura para o PDF */
+        .signature-box { margin-top: 50px; display: flex; justify-content: space-between; text-align: center; font-size: 12px; width: 100%; }
+        .sig-line { width: 45%; border-top: 1px solid #000; padding-top: 5px; margin-top: 30px; }
+
+        @media print { 
+            .no-print { display: none !important; } 
+            .page-break { page-break-after: always; padding: 20px; border-bottom: 1px dashed #ccc; } 
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; } 
+            th, td { border: 1px solid #000; padding: 8px; text-align: center; font-size: 12px; } 
+            body { background: white; }
+            .card { box-shadow: none; border: none; max-width: 100%; width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -104,7 +111,7 @@
 
 <div id="screen-adm" class="container hidden">
     <div class="card" style="max-width: 850px; text-align: left; align-items: flex-start;">
-        <button class="btn-red" style="width:auto; padding:10px;" onclick="voltarAoTotem()">⬅ VOLTAR</button>
+        <button class="btn-red no-print" style="width:auto; padding:10px;" onclick="voltarAoTotem()">⬅ VOLTAR</button>
         <h3 id="adm-titulo">Painel Administrativo</h3>
         <div class="no-print" style="background:#f1f5f9; padding:15px; border-radius:15px; margin-bottom:15px; width:100%; box-sizing: border-box;">
             <input type="month" id="filtro-mes">
@@ -139,6 +146,13 @@
 
     let configEmpresa = null, faceMatcher = null, modoCadastro = false;
 
+    // BLOCO DE ASSINATURA PADRONIZADO
+    const htmlAssinaturas = `
+        <div class="signature-box">
+            <div class="sig-line">Assinatura do Colaborador</div>
+            <div class="sig-line">Assinatura da Empresa</div>
+        </div>`;
+
     async function init() {
         if (!empresaID) return;
         try {
@@ -172,17 +186,17 @@
             nome: document.getElementById('m-nome').value, senha: document.getElementById('m-senha').value, 
             cor: document.getElementById('m-cor').value, logo: document.getElementById('m-logo').value 
         });
-        alert("Cliente Salvo!"); listarClientes();
+        alert("Salvo!"); listarClientes();
     };
 
     async function listarClientes() {
         const s = await getDocs(collection(db, "configuracoes_mestre"));
-        let h = "<h4>Empresas Ativas:</h4>"; 
+        let h = "<h4>Empresas:</h4>"; 
         s.forEach(d => h += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;"><span><b>${d.id}</b></span><button class="btn-red btn-small" onclick="window.delC('${d.id}')">X</button></div>`);
         document.getElementById('lista-clientes').innerHTML = h;
     }
 
-    window.delC = async (id) => { if(confirm("Excluir cliente?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); listarClientes(); }};
+    window.delC = async (id) => { if(confirm("Excluir?")) { await deleteDoc(doc(db, "configuracoes_mestre", id)); listarClientes(); }};
 
     async function ligarCamera() {
         const weights = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
@@ -212,8 +226,8 @@
             if(m && m.label !== 'unknown') {
                 const agora = new Date(), hora = agora.toLocaleTimeString('pt-BR').substring(0,5);
                 await addDoc(collection(db, `empresas/${empresaID}/pontos`), { nome: m.label, data: agora.toLocaleDateString('pt-BR'), hora: hora, timestamp: Date.now() });
-                alert("PONTO REGISTRADO: " + m.label);
-            } else alert("Funcionário não reconhecido.");
+                alert("REGISTRADO: " + m.label);
+            } else alert("Não reconhecido.");
         }
     };
 
@@ -227,17 +241,60 @@
         d.funcionarios.forEach(fDoc => {
             const n = fDoc.id; let totalMins = 0, rows = "";
             const meusPts = d.pontos.filter(p => p.nome === n);
-            const datas = [...new Set(meusPts.map(p => p.data))].sort();
+            const datas = [...new Set(meusPts.map(p => p.data))].sort((a,b) => a.split('/').reverse().join('-').localeCompare(b.split('/').reverse().join('-')));
+            
             datas.forEach(dt => {
                 const batidasNoDia = meusPts.filter(p => p.data === dt).sort((a,b) => a.hora.localeCompare(b.hora));
                 const batidasTexto = batidasNoDia.map(b => b.hora).join(' | ');
                 for(let i=0; i < batidasNoDia.length-1; i+=2){
-                    const [h1,m1] = batidasNoDia[i].hora.split(':').map(Number), [h2,m2] = batidasNoDia[i+1].hora.split(':').map(Number);
+                    const [h1,m1] = batidasNoDia[i].hora.split(':').map(Number);
+                    const [h2,m2] = batidasNoDia[i+1].hora.split(':').map(Number);
                     totalMins += (h2*60+m2)-(h1*60+m1);
                 }
                 rows += `<tr><td>${dt}</td><td>${batidasTexto} <button class="btn-small no-print" onclick="window.editarBatidas('${n}', '${dt}', '${batidasTexto}')">✏️</button></td><td>${Math.floor(totalMins/60)}h ${totalMins%60}m</td></tr>`;
             });
-            h += `<div class="page-break"><button class="btn-red btn-small no-print" onclick="window.excluirFuncionario('${n}')">🗑️ EXCLUIR</button><h3>RELATÓRIO: ${n.toUpperCase()}</h3><table><tr><th>DATA</th><th>BATIDAS</th><th>TOTAL</th></tr>${rows}</table></div>`;
+
+            h += `<div class="page-break">
+                <button class="btn-red btn-small no-print" onclick="window.excluirFuncionario('${n}')">🗑️ EXCLUIR</button>
+                <center><h3>RELAÇÃO DE PONTOS - ${configEmpresa.nome}</h3></center>
+                <p><b>COLABORADOR:</b> ${n.toUpperCase()}</p>
+                <table><tr><th>DATA</th><th>BATIDAS</th><th>TOTAL DIA</th></tr>${rows}</table>
+                ${htmlAssinaturas}
+            </div>`;
+        });
+        document.getElementById('box-relatorio').innerHTML = h;
+    };
+
+    window.gerarHolerite = async () => {
+        const d = await carregarDados(); if(!d) return;
+        let h = "";
+        d.funcionarios.forEach(fDoc => {
+            const f = fDoc.data(), vh = f.valorHora || 0; let totalMins = 0;
+            const meusPts = d.pontos.filter(p => p.nome === fDoc.id);
+            const datas = [...new Set(meusPts.map(p => p.data))].sort();
+            
+            datas.forEach(dt => {
+                const batidas = meusPts.filter(p => p.data === dt).sort((a,b) => a.hora.localeCompare(b.hora));
+                for(let i=0; i<batidas.length-1; i+=2){
+                    const [h1,m1] = batidas[i].hora.split(':').map(Number), [h2,m2] = batidas[i+1].hora.split(':').map(Number);
+                    totalMins += (h2*60+m2)-(h1*60+m1);
+                }
+            });
+            const hDec = totalMins/60, total = hDec * vh;
+            h += `<div class="page-break">
+                <button class="btn-primary btn-small no-print" onclick="window.editarValorHora('${fDoc.id}', ${vh})">✏️ EDITAR VALOR HORA</button>
+                <div style="border:2px solid #000; padding:20px;">
+                    <center><h2>RECIBO DE PAGAMENTO</h2></center>
+                    <p><b>EMPRESA:</b> ${configEmpresa.nome}</p>
+                    <p><b>COLABORADOR:</b> ${fDoc.id.toUpperCase()}</p>
+                    <table width="100%">
+                        <tr><td>Horas Trabalhadas</td><td>${hDec.toFixed(2)}h</td></tr>
+                        <tr><td>Valor da Hora</td><td>R$ ${vh.toFixed(2)}</td></tr>
+                        <tr style="background:#eee"><td><b>TOTAL LÍQUIDO</b></td><td><b>R$ ${total.toFixed(2)}</b></td></tr>
+                    </table>
+                    ${htmlAssinaturas}
+                </div>
+            </div>`;
         });
         document.getElementById('box-relatorio').innerHTML = h;
     };
@@ -247,34 +304,19 @@
         if (novaString !== null) {
             const q = query(collection(db, `empresas/${empresaID}/pontos`), where("nome", "==", nome), where("data", "==", data));
             const snap = await getDocs(q);
-            for(let dDoc of snap.docs) await deleteDoc(doc(db, `empresas/${empresaID}/pontos`, dDoc.id));
-            const novasHoras = novaString.split('|').map(s => s.trim());
-            for (let h of novasHoras) {
+            for(let docD of snap.docs) await deleteDoc(doc(db, `empresas/${empresaID}/pontos`, docD.id));
+            const novas = novaString.split('|').map(s => s.trim());
+            for (let h of novas) {
                 if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(h)) {
                     await addDoc(collection(db, `empresas/${empresaID}/pontos`), { nome, data, hora: h, timestamp: Date.now() });
                 }
             }
-            alert("Ok!"); window.gerarRelatorio();
+            alert("Atualizado!"); window.gerarRelatorio();
         }
     };
 
     window.excluirFuncionario = async (nome) => { if(confirm(`Excluir ${nome}?`)) { await deleteDoc(doc(db, `empresas/${empresaID}/biometria`, nome)); window.gerarRelatorio(); } };
-
-    window.gerarHolerite = async () => {
-        const d = await carregarDados(); if(!d) return;
-        let h = "";
-        d.funcionarios.forEach(fDoc => {
-            const f = fDoc.data(), vh = f.valorHora || 0; let totalMins = 0;
-            const meusPts = d.pontos.filter(p => p.nome === fDoc.id);
-            meusPts.forEach((p, i) => { if(i%2===0 && meusPts[i+1]){ 
-                const [h1,m1] = p.hora.split(':').map(Number), [h2,m2] = meusPts[i+1].hora.split(':').map(Number);
-                totalMins += (h2*60+m2)-(h1*60+m1);
-            }});
-            const total = (totalMins/60) * vh;
-            h += `<div class="page-break" style="border:1px solid #000; padding:20px;"><h3>RECIBO: ${fDoc.id.toUpperCase()}</h3><p>Total Horas: ${(totalMins/60).toFixed(2)}</p><p>Valor Hora: R$ ${vh.toFixed(2)}</p><h4>Total a Pagar: R$ ${total.toFixed(2)}</h4></div><br>`;
-        });
-        document.getElementById('box-relatorio').innerHTML = h;
-    };
+    window.editarValorHora = async (nome, valorAtual) => { const novo = prompt(`Novo valor hora:`, valorAtual); if(novo) { await updateDoc(doc(db, `empresas/${empresaID}/biometria`, nome), { valorHora: parseFloat(novo) }); alert("OK!"); window.gerarHolerite(); } };
 
     async function carregarDados() {
         const mesSel = document.getElementById('filtro-mes').value;
